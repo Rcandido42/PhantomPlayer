@@ -8,64 +8,73 @@ A arquitetura do projeto foi estruturada com um foco rigoroso na segurança da c
 
 ---
 
+## 📥 Download e Instalação
+
+1. Vá à secção [**Releases**](../../releases) deste repositório
+2. Baixe o ficheiro `PhantomPlayer Setup X.X.X.exe`
+3. Execute o instalador e siga as instruções
+4. Abra o **PhantomPlayer** e faça login com a sua conta Steam
+
+> **Nota:** Não é necessário instalar Node.js nem qualquer outra ferramenta. O instalador inclui tudo.
+
+---
+
 ## ✨ Funcionalidades
 
 - 🎮 **Interface gráfica** — Sem terminal, sem ficheiros de configuração
+- 📱 **Login por QR Code** — Leia o código QR com a app Steam do telemóvel
 - 🔐 **Steam Guard integrado** — Código de autenticação pedido visualmente
 - 🕹️ **Pesquisa de jogos** — Encontre jogos por nome diretamente na app
+- 🖼️ **Banners HD** — Imagens oficiais da Steam em alta qualidade
 - ⏱️ **Rastreio de horas** — Veja quanto tempo já foi farmado por jogo
+- 🎨 **Temas personalizáveis** — Phantom Purple, Steam Blue, Cyberpunk Yellow, Midnight Black, Forest Green
 - 🔒 **Credenciais encriptadas** — Encriptação nativa do Windows (DPAPI)
 - 📌 **System tray** — Minimiza para a bandeja do sistema
 - 🌐 **Bilingue** — Interface em Português e Inglês
 
 ---
 
-## 🚀 Instalação e Uso
+## 🎮 Como usar
 
-### Opção 1: Instalador (recomendado)
+1. **Abra** o PhantomPlayer
+2. **Leia o QR Code** com a app Steam do telemóvel (ou use login clássico)
+3. **Pesquise jogos** por nome ou adicione por **AppID**
+4. Clique em **Iniciar Farm**
+5. Pronto! Pode minimizar para a bandeja do sistema
 
-1. Faça o download do instalador `.exe` na secção [Releases](../../releases)
-2. Execute o instalador e siga as instruções
-3. Abra o **PhantomPlayer**, faça login com a sua conta Steam e comece a farmar
+---
 
-### Opção 2: A partir do código fonte
+## 🔒 Segurança
 
-#### Pré-requisitos
+- Nenhuma credencial é guardada no código fonte ou no repositório
+- As senhas são encriptadas pelo **DPAPI do Windows** (o mesmo sistema usado pelo Chrome)
+- O ficheiro de configuração fica em `%APPDATA%` — fora do projeto
+- Toda a comunicação é feita diretamente com os servidores da Valve
+
+---
+
+## 🛠️ Para Desenvolvedores
+
+### Pré-requisitos
 - [Node.js](https://nodejs.org/) (versão 18 ou superior)
 - [Git](https://git-scm.com/)
 
-#### Passos
+### Executar em modo desenvolvimento
 
 ```bash
-# Clonar o repositório
-git clone https://github.com/seu-usuario/PhantomPlayer.git
+git clone https://github.com/Rcandido42/PhantomPlayer.git
 cd PhantomPlayer
-
-# Instalar dependências
 npm install
-
-# Iniciar a aplicação
 npm start
 ```
 
-#### Gerar o instalador `.exe`
+### Gerar o instalador `.exe`
 
 ```bash
 npm run build
 ```
 
 O instalador será gerado na pasta `dist/`.
-
----
-
-## 🎮 Como usar
-
-1. **Abra** o PhantomPlayer
-2. **Faça login** com o seu nome de utilizador e senha da Steam
-3. Se tiver **Steam Guard**, digite o código quando solicitado
-4. **Pesquise jogos** por nome ou adicione por **AppID**
-5. Clique em **Iniciar Farm**
-6. Pronto! Pode minimizar para a bandeja do sistema
 
 ---
 
@@ -85,7 +94,14 @@ PhantomPlayer/
 │   ├── styles.css       # Design dark mode premium
 │   └── app.js           # Lógica da UI + tradução PT/EN
 ├── assets/
-│   └── icon.png         # Ícone da aplicação
+│   ├── icon.png         # Ícone da aplicação
+│   └── icon.ico         # Ícone do instalador Windows
 ├── package.json
 └── README.md
 ```
+
+---
+
+## 📄 Licença
+
+Este projeto está licenciado sob a [MIT License](LICENSE).

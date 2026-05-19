@@ -28,6 +28,8 @@ contextBridge.exposeInMainWorld('phantom', {
   getLanguage: () => ipcRenderer.invoke('settings:get-language'),
   setLanguage: (lang) => ipcRenderer.invoke('settings:set-language', lang),
   getFarmHours: () => ipcRenderer.invoke('settings:get-farm-hours'),
+  getTheme: () => ipcRenderer.invoke('settings:get-theme'),
+  setTheme: (theme) => ipcRenderer.invoke('settings:set-theme', theme),
 
   // Events
   onFarmTick: (cb) => ipcRenderer.on('steam:farm-tick', (_e, data) => cb(data)),

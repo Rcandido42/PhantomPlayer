@@ -1033,3 +1033,226 @@ body {
   0%, 100% { box-shadow: 0 4px 20px rgba(34, 197, 94, 0.2); }
   50% { box-shadow: 0 4px 32px rgba(34, 197, 94, 0.4); }
 }
+
+/* =============================================
+   THEME SELECTOR
+   ============================================= */
+
+.theme-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--transition);
+  background: transparent;
+  color: var(--text-muted);
+  margin-right: 2px;
+  position: relative;
+}
+
+.theme-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.theme-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 6px;
+  min-width: 170px;
+  z-index: 200;
+  animation: fadeIn 0.2s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.theme-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.theme-option.active {
+  background: var(--accent-soft);
+  color: var(--accent-light);
+}
+
+.theme-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+.theme-option.active .theme-swatch {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* =============================================
+   THEMES
+   ============================================= */
+
+/* 🌊 Steam Blue */
+[data-theme="steam-blue"] {
+  --bg-primary: #0a0e14;
+  --bg-secondary: #0f1923;
+  --bg-tertiary: #1a2634;
+  --glass-bg: rgba(102, 192, 244, 0.03);
+  --glass-bg-hover: rgba(102, 192, 244, 0.06);
+  --glass-border: rgba(102, 192, 244, 0.08);
+  --glass-border-hover: rgba(102, 192, 244, 0.14);
+  --accent: #1a9fff;
+  --accent-hover: #0d8ae0;
+  --accent-light: #66c0f4;
+  --accent-glow: rgba(26, 159, 255, 0.25);
+  --accent-soft: rgba(26, 159, 255, 0.1);
+}
+
+[data-theme="steam-blue"] #screen-login {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(26, 159, 255, 0.08) 0%, transparent 60%),
+    var(--bg-primary);
+}
+
+[data-theme="steam-blue"] .btn-primary,
+[data-theme="steam-blue"] .btn-farm:not(.farming) {
+  background: linear-gradient(135deg, #1a9fff, #0d6ecc);
+}
+
+[data-theme="steam-blue"] .login-tab.active {
+  background: rgba(26, 159, 255, 0.15);
+  box-shadow: 0 0 12px rgba(26, 159, 255, 0.1);
+}
+
+/* ⚡ Cyberpunk Yellow */
+[data-theme="cyberpunk"] {
+  --bg-primary: #0a0a00;
+  --bg-secondary: #14140a;
+  --bg-tertiary: #1e1e0f;
+  --glass-bg: rgba(250, 204, 21, 0.03);
+  --glass-bg-hover: rgba(250, 204, 21, 0.06);
+  --glass-border: rgba(250, 204, 21, 0.08);
+  --glass-border-hover: rgba(250, 204, 21, 0.14);
+  --accent: #eab308;
+  --accent-hover: #ca8a04;
+  --accent-light: #facc15;
+  --accent-glow: rgba(234, 179, 8, 0.25);
+  --accent-soft: rgba(234, 179, 8, 0.1);
+}
+
+[data-theme="cyberpunk"] #screen-login {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(234, 179, 8, 0.08) 0%, transparent 60%),
+    var(--bg-primary);
+}
+
+[data-theme="cyberpunk"] .btn-primary,
+[data-theme="cyberpunk"] .btn-farm:not(.farming) {
+  background: linear-gradient(135deg, #eab308, #b45309);
+  color: #0a0a00;
+}
+
+[data-theme="cyberpunk"] .login-tab.active {
+  background: rgba(234, 179, 8, 0.15);
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.1);
+}
+
+[data-theme="cyberpunk"] .login-header h1 {
+  background: linear-gradient(135deg, var(--text-primary), var(--accent-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 🌑 Midnight Black */
+[data-theme="midnight"] {
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #141414;
+  --glass-bg: rgba(255, 255, 255, 0.02);
+  --glass-bg-hover: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-border-hover: rgba(255, 255, 255, 0.10);
+  --accent: #a3a3a3;
+  --accent-hover: #737373;
+  --accent-light: #d4d4d4;
+  --accent-glow: rgba(163, 163, 163, 0.15);
+  --accent-soft: rgba(163, 163, 163, 0.08);
+}
+
+[data-theme="midnight"] #screen-login {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(163, 163, 163, 0.04) 0%, transparent 60%),
+    var(--bg-primary);
+}
+
+[data-theme="midnight"] .btn-primary,
+[data-theme="midnight"] .btn-farm:not(.farming) {
+  background: linear-gradient(135deg, #525252, #262626);
+}
+
+[data-theme="midnight"] .login-tab.active {
+  background: rgba(163, 163, 163, 0.1);
+  box-shadow: 0 0 12px rgba(163, 163, 163, 0.05);
+}
+
+[data-theme="midnight"] .qr-wrapper::before {
+  background: conic-gradient(from 0deg, #525252, transparent 60%, #525252);
+}
+
+/* 🌿 Forest Green */
+[data-theme="forest"] {
+  --bg-primary: #040a06;
+  --bg-secondary: #0a140c;
+  --bg-tertiary: #111e14;
+  --glass-bg: rgba(34, 197, 94, 0.03);
+  --glass-bg-hover: rgba(34, 197, 94, 0.06);
+  --glass-border: rgba(34, 197, 94, 0.08);
+  --glass-border-hover: rgba(34, 197, 94, 0.14);
+  --accent: #16a34a;
+  --accent-hover: #15803d;
+  --accent-light: #4ade80;
+  --accent-glow: rgba(22, 163, 74, 0.25);
+  --accent-soft: rgba(22, 163, 74, 0.1);
+}
+
+[data-theme="forest"] #screen-login {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(22, 163, 74, 0.08) 0%, transparent 60%),
+    var(--bg-primary);
+}
+
+[data-theme="forest"] .btn-primary,
+[data-theme="forest"] .btn-farm:not(.farming) {
+  background: linear-gradient(135deg, #16a34a, #0d6632);
+}
+
+[data-theme="forest"] .login-tab.active {
+  background: rgba(22, 163, 74, 0.15);
+  box-shadow: 0 0 12px rgba(22, 163, 74, 0.1);
+}

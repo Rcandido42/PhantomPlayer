@@ -103,7 +103,8 @@ const dom = {
   gameList: $('game-list'), emptyGames: $('empty-games'),
   totalHours: $('total-hours'), gameCount: $('game-count'), sessionTime: $('session-time'),
   btnFarm: $('btn-farm'), btnFarmText: $('btn-farm-text'), farmIconPlay: $('farm-icon-play'), farmIconStop: $('farm-icon-stop'),
-  btnLang: $('btn-lang'), btnMinimize: $('btn-minimize'), btnClose: $('btn-close')
+  btnLang: $('btn-lang'), btnMinimize: $('btn-minimize'), btnClose: $('btn-close'),
+  btnTheme: $('btn-theme'), themeDropdown: $('theme-dropdown')
 };
 
 let state = { games: [], farmHours: {}, isFarming: false, sessionStart: null, sessionInterval: null, searchDebounce: null };
@@ -368,7 +369,6 @@ window.phantom.onDisconnected(() => { state.isFarming = false; stopSessionTimer(
 // ========== WINDOW ==========
 dom.btnMinimize.addEventListener('click', () => window.phantom.minimizeWindow());
 dom.btnClose.addEventListener('click', () => window.phantom.closeWindow());
-
 // ========== LANGUAGE ==========
 dom.btnLang.addEventListener('click', async () => {
   currentLang = currentLang === 'pt' ? 'en' : 'pt';
@@ -376,12 +376,49 @@ dom.btnLang.addEventListener('click', async () => {
   applyTranslations(); renderGameList(); updateFarmButton();
 });
 
+// ========== THEME ==========
+let currentTheme = 'phantom';
+
+dom.btnTheme.addEventListener('click', (e) => {
+  e.stopPropagation();
+  dom.themeDropdown.classList.toggle('hidden');
+});
+
+document.addEventListener('click', (e) => {
+  if (!dom.themeDropdown.contains(e.target) && e.target !== dom.btnTheme) {
+    dom.themeDropdown.classList.add('hidden');
+  }
+});
+
+dom.themeDropdown.querySelectorAll('.theme-option').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const theme = btn.dataset.theme;
+    applyTheme(theme);
+    await window.phantom.setTheme(theme);
+    dom.themeDropdown.classList.add('hidden');
+  });
+});
+
+function applyTheme(theme) {
+  currentTheme = theme;
+  if (theme === 'phantom') {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+  dom.themeDropdown.querySelectorAll('.theme-option').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.theme === theme);
+  });
+}
+
 function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 
 // ========== INIT ==========
 (async function init() {
   currentLang = await window.phantom.getLanguage() || 'pt';
   applyTranslations();
+  const savedTheme = await window.phantom.getTheme() || 'phantom';
+  applyTheme(savedTheme);
   const creds = await window.phantom.getCredentials();
   if (creds) { dom.inputUsername.value = creds.username; dom.inputPassword.value = creds.password; dom.checkRemember.checked = true; }
   await loadGames();

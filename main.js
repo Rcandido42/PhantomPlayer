@@ -197,6 +197,8 @@ function setupIPC() {
   ipcMain.handle('settings:get-language', async () => settings.getLanguage());
   ipcMain.handle('settings:set-language', async (_e, l) => { settings.setLanguage(l); return { success: true }; });
   ipcMain.handle('settings:get-farm-hours', async () => settings.getFarmHours());
+  ipcMain.handle('settings:get-theme', async () => settings.getTheme());
+  ipcMain.handle('settings:set-theme', async (_e, t) => { settings.setTheme(t); return { success: true }; });
 
   // --- Window ---
   ipcMain.on('window:minimize', () => { if (mainWindow) mainWindow.minimize(); });

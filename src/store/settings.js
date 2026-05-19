@@ -51,6 +51,9 @@ class Settings {
 
   clearRefreshToken() { this.store.delete('refreshToken'); }
 
+  getTheme() { return this.store.get('theme', 'phantom'); }
+  setTheme(theme) { this.store.set('theme', theme); }
+
   addFarmTime(appId, hours) {
     const data = this.store.get('farmHours', {});
     const key = String(appId);

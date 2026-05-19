@@ -19,6 +19,33 @@
       <span class="titlebar-title">PhantomPlayer</span>
     </div>
     <div class="titlebar-right">
+      <div style="position: relative; -webkit-app-region: no-drag;">
+        <button id="btn-theme" class="titlebar-btn theme-btn" title="Tema">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <div id="theme-dropdown" class="theme-dropdown hidden">
+          <button class="theme-option active" data-theme="phantom">
+            <span class="theme-swatch" style="background: #7c3aed;"></span>
+            Phantom Purple
+          </button>
+          <button class="theme-option" data-theme="steam-blue">
+            <span class="theme-swatch" style="background: #1a9fff;"></span>
+            Steam Blue
+          </button>
+          <button class="theme-option" data-theme="cyberpunk">
+            <span class="theme-swatch" style="background: #eab308;"></span>
+            Cyberpunk Yellow
+          </button>
+          <button class="theme-option" data-theme="midnight">
+            <span class="theme-swatch" style="background: #525252;"></span>
+            Midnight Black
+          </button>
+          <button class="theme-option" data-theme="forest">
+            <span class="theme-swatch" style="background: #16a34a;"></span>
+            Forest Green
+          </button>
+        </div>
+      </div>
       <button id="btn-lang" class="titlebar-btn lang-btn" title="Mudar idioma">PT</button>
       <button id="btn-minimize" class="titlebar-btn" title="Minimizar">
         <svg width="12" height="12" viewBox="0 0 12 12"><rect y="5" width="12" height="2" fill="currentColor"/></svg>
