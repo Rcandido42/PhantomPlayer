@@ -29,10 +29,7 @@ class SteamClient extends EventEmitter {
     this.client.on('error', (err) => {
       this.isLoggedIn = false;
       this.isFarming = false;
-      this.emit('error', {
-        eresult: err.eresult,
-        message: err.message
-      });
+      this.emit('error', { eresult: err.eresult, message: err.message });
     });
 
     this.client.on('disconnected', (eresult, msg) => {
@@ -44,10 +41,11 @@ class SteamClient extends EventEmitter {
   }
 
   login(username, password) {
-    this.client.logOn({
-      accountName: username,
-      password: password
-    });
+    this.client.logOn({ accountName: username, password: password });
+  }
+
+  loginWithToken(refreshToken) {
+    this.client.logOn({ refreshToken });
   }
 
   submitGuardCode(code) {

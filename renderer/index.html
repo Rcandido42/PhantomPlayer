@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' https://store.steampowered.com https://cdn.akamai.steamstatic.com data:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' https://shared.akamai.steamstatic.com https://store.steampowered.com https://cdn.akamai.steamstatic.com data:;">
   <title>PhantomPlayer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +12,7 @@
 </head>
 <body>
 
-  <!-- ========== TITLE BAR PERSONALIZADA ========== -->
+  <!-- ========== TITLE BAR ========== -->
   <header class="titlebar" id="titlebar">
     <div class="titlebar-left">
       <img src="../assets/icon.png" alt="PhantomPlayer" class="titlebar-icon">
@@ -29,7 +29,7 @@
     </div>
   </header>
 
-  <!-- ========== ECRÃ DE LOGIN ========== -->
+  <!-- ========== LOGIN SCREEN ========== -->
   <main id="screen-login" class="screen active">
     <div class="login-card glass">
       <div class="login-header">
@@ -38,30 +38,67 @@
         <p class="login-subtitle" data-i18n="login.subtitle">Faça login na sua conta Steam</p>
       </div>
 
-      <form id="form-login" autocomplete="off">
-        <div class="input-group">
-          <label for="input-username" data-i18n="login.username">Nome de utilizador</label>
-          <div class="input-wrapper">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <input type="text" id="input-username" required spellcheck="false">
-          </div>
-        </div>
-        <div class="input-group">
-          <label for="input-password" data-i18n="login.password">Senha</label>
-          <div class="input-wrapper">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <input type="password" id="input-password" required>
-          </div>
-        </div>
-        <div class="checkbox-group">
-          <input type="checkbox" id="check-remember">
-          <label for="check-remember" data-i18n="login.remember">Lembrar credenciais</label>
-        </div>
-        <button type="submit" id="btn-login" class="btn-primary">
-          <span data-i18n="login.submit">Entrar</span>
-          <div class="spinner hidden" id="login-spinner"></div>
+      <!-- Login Tabs -->
+      <div class="login-tabs">
+        <button class="login-tab active" id="tab-qr" data-tab="qr">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17" y1="21" x2="17" y2="21.01"/></svg>
+          <span data-i18n="login.tabQR">QR Code</span>
         </button>
-      </form>
+        <button class="login-tab" id="tab-classic" data-tab="classic">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span data-i18n="login.tabClassic">Senha</span>
+        </button>
+      </div>
+
+      <!-- QR Code Panel -->
+      <div id="panel-qr" class="login-panel active">
+        <div class="qr-container">
+          <div id="qr-wrapper" class="qr-wrapper">
+            <div id="qr-loading" class="qr-loading">
+              <div class="spinner"></div>
+              <span data-i18n="login.qrLoading">A gerar código QR...</span>
+            </div>
+            <img id="qr-image" class="qr-image hidden" alt="QR Code">
+          </div>
+          <div class="qr-instructions">
+            <p data-i18n="login.qrStep1">1. Abre a app Steam no telemóvel</p>
+            <p data-i18n="login.qrStep2">2. Vai a Steam Guard → Ler código QR</p>
+            <p data-i18n="login.qrStep3">3. Aponta a câmara para este código</p>
+          </div>
+          <div id="qr-status" class="qr-status hidden">
+            <div class="spinner-small"></div>
+            <span data-i18n="login.qrConfirming">Confirma no telemóvel...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Classic Login Panel -->
+      <div id="panel-classic" class="login-panel">
+        <form id="form-login" autocomplete="off">
+          <div class="input-group">
+            <label for="input-username" data-i18n="login.username">Nome de utilizador</label>
+            <div class="input-wrapper">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input type="text" id="input-username" required spellcheck="false">
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="input-password" data-i18n="login.password">Senha</label>
+            <div class="input-wrapper">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input type="password" id="input-password" required>
+            </div>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="check-remember">
+            <label for="check-remember" data-i18n="login.remember">Lembrar credenciais</label>
+          </div>
+          <button type="submit" id="btn-login" class="btn-primary">
+            <span data-i18n="login.submit">Entrar</span>
+            <div class="spinner hidden" id="login-spinner"></div>
+          </button>
+        </form>
+      </div>
 
       <div id="login-error" class="error-box hidden"></div>
     </div>
@@ -87,15 +124,11 @@
     </div>
   </div>
 
-  <!-- ========== ECRÃ DASHBOARD ========== -->
+  <!-- ========== DASHBOARD ========== -->
   <main id="screen-dashboard" class="screen hidden">
-
-    <!-- Barra de Estado -->
     <div class="status-bar glass">
       <div class="status-left">
-        <div class="status-dot-wrapper">
-          <span id="status-dot" class="status-dot online"></span>
-        </div>
+        <div class="status-dot-wrapper"><span id="status-dot" class="status-dot online"></span></div>
         <span id="status-text" data-i18n="dashboard.status.online">Online</span>
         <span class="status-divider">•</span>
         <span id="steam-id" class="steam-id"></span>
@@ -103,16 +136,11 @@
       <button id="btn-logout" class="btn-small btn-outline" data-i18n="dashboard.logout">Sair</button>
     </div>
 
-    <!-- Conteúdo Principal -->
     <div class="dashboard-grid">
-
-      <!-- Painel de Jogos -->
       <section class="games-panel glass">
         <div class="panel-header">
           <h2 data-i18n="dashboard.games.title">Jogos</h2>
         </div>
-
-        <!-- Pesquisa / Adicionar -->
         <div class="add-game-row">
           <div class="search-wrapper">
             <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -120,11 +148,7 @@
           </div>
           <button id="btn-add-game" class="btn-small btn-accent" data-i18n="dashboard.games.add">Adicionar</button>
         </div>
-
-        <!-- Resultados de Pesquisa -->
         <div id="search-results" class="search-dropdown hidden"></div>
-
-        <!-- Lista de Jogos -->
         <div id="game-list" class="game-list">
           <div class="empty-state" id="empty-games">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="12" x2="6" y2="12.01"/><line x1="10" y1="12" x2="10" y2="12.01"/><path d="M14 10h4M16 8v4"/></svg>
@@ -134,9 +158,7 @@
         </div>
       </section>
 
-      <!-- Painel de Controlo -->
       <section class="control-panel">
-        <!-- Estatísticas -->
         <div class="stats-grid">
           <div class="stat-card glass">
             <span class="stat-value" id="total-hours">0.0</span>
@@ -151,8 +173,6 @@
             <span class="stat-label" data-i18n="dashboard.farm.sessionTime">Sessão atual</span>
           </div>
         </div>
-
-        <!-- Botão Farm -->
         <button id="btn-farm" class="btn-farm" disabled>
           <div class="btn-farm-inner">
             <svg id="farm-icon-play" class="farm-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>

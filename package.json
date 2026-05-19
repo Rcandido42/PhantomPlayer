@@ -1,6 +1,7 @@
 {
   "name": "phantom-player",
   "version": "1.0.0",
+  "author": "Ricardo Cândido",
   "description": "O PhantomPlayer é um bot leve e seguro em Node.js que simula tempo de jogo na Steam. Ele opera em segundo plano sem baixar arquivos pesados, farmando horas em múltiplos jogos de forma automatizada. Autenticação via Steam Guard inclusa.",
   "main": "main.js",
   "scripts": {
@@ -20,6 +21,8 @@
   "license": "MIT",
   "dependencies": {
     "electron-store": "^8.2.0",
+    "qrcode": "^1.5.4",
+    "steam-session": "^1.9.4",
     "steam-user": "^5.2.0"
   },
   "devDependencies": {
@@ -40,7 +43,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "assets/icon.png"
