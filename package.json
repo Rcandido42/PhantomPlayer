@@ -1,0 +1,55 @@
+{
+  "name": "phantom-player",
+  "version": "1.0.0",
+  "description": "O PhantomPlayer é um bot leve e seguro em Node.js que simula tempo de jogo na Steam. Ele opera em segundo plano sem baixar arquivos pesados, farmando horas em múltiplos jogos de forma automatizada. Autenticação via Steam Guard inclusa.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "keywords": [
+    "steam",
+    "bot",
+    "farm",
+    "hours",
+    "idle",
+    "electron",
+    "desktop"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "electron-store": "^8.2.0",
+    "steam-user": "^5.2.0"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.0"
+  },
+  "build": {
+    "appId": "com.phantomplayer.app",
+    "productName": "PhantomPlayer",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "renderer/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icon.png",
+      "uninstallerIcon": "assets/icon.png"
+    }
+  }
+}
