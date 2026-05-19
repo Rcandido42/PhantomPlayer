@@ -86,6 +86,27 @@ class SteamClient extends EventEmitter {
       steamId: this.steamId
     };
   }
+
+  async getOwnedGames() {
+    if (!this.isLoggedIn || !this.steamId) return [];
+    try {
+      const response = await this.client.getUserOwnedApps(this.steamId, {
+        includeAppInfo: true,
+        includePlayedFreeGames: true
+      });
+      if (response && response.apps) {
+        return response.apps.map(app => ({
+          appId: app.appid,
+          name: app.name,
+          playtime: app.playtime_forever
+        })).sort((a, b) => a.name.localeCompare(b.name));
+      }
+      return [];
+    } catch (err) {
+      console.error('Error fetching owned games:', err);
+      return [];
+    }
+  }
 }
 
 module.exports = SteamClient;

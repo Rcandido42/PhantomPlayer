@@ -46,6 +46,9 @@
           </button>
         </div>
       </div>
+      <button id="btn-settings" class="titlebar-btn" title="Configurações">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
       <button id="btn-lang" class="titlebar-btn lang-btn" title="Mudar idioma">PT</button>
       <button id="btn-minimize" class="titlebar-btn" title="Minimizar">
         <svg width="12" height="12" viewBox="0 0 12 12"><rect y="5" width="12" height="2" fill="currentColor"/></svg>
@@ -151,6 +154,51 @@
     </div>
   </div>
 
+  <!-- ========== MODAL SETTINGS ========== -->
+  <div id="modal-settings" class="modal hidden">
+    <div class="modal-overlay" id="overlay-settings"></div>
+    <div class="modal-card glass">
+      <div class="modal-header">
+        <svg class="modal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/><circle cx="12" cy="12" r="3"/></svg>
+        <h2 data-i18n="settings.title">Configurações</h2>
+      </div>
+      <div class="settings-content">
+        <div class="checkbox-group">
+          <input type="checkbox" id="check-run-startup">
+          <label for="check-run-startup" data-i18n="settings.runStartup">Iniciar com o Windows</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="check-auto-farm">
+          <label for="check-auto-farm" data-i18n="settings.autoFarm">Iniciar Farm automaticamente após login</label>
+        </div>
+      </div>
+      <button id="btn-settings-close" class="btn-primary" style="margin-top:15px;">
+        <span data-i18n="settings.close">Fechar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========== MODAL LIBRARY ========== -->
+  <div id="modal-library" class="modal hidden">
+    <div class="modal-overlay" id="overlay-library"></div>
+    <div class="modal-card glass library-card">
+      <div class="modal-header">
+        <svg class="modal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <h2 data-i18n="library.title">Meus Jogos</h2>
+        <button id="btn-library-close" class="close-modal-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="library-search">
+        <input type="text" id="input-library-search" data-i18n-placeholder="library.search" placeholder="Filtrar jogos...">
+      </div>
+      <div id="library-loading" class="library-loading hidden">
+        <div class="spinner"></div>
+      </div>
+      <div id="library-list" class="library-list">
+        <!-- Jogos serão injetados aqui -->
+      </div>
+    </div>
+  </div>
+
   <!-- ========== DASHBOARD ========== -->
   <main id="screen-dashboard" class="screen hidden">
     <div class="status-bar glass">
@@ -173,6 +221,7 @@
             <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="text" id="input-search" data-i18n-placeholder="dashboard.games.searchPlaceholder" placeholder="Pesquisar jogo ou digitar AppID...">
           </div>
+          <button id="btn-load-library" class="btn-small btn-outline" data-i18n="dashboard.games.loadLibrary" title="Carregar jogos da sua conta">Meus Jogos</button>
           <button id="btn-add-game" class="btn-small btn-accent" data-i18n="dashboard.games.add">Adicionar</button>
         </div>
         <div id="search-results" class="search-dropdown hidden"></div>

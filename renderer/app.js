@@ -34,6 +34,13 @@ const i18n = {
     'dashboard.farm.sessionTime': 'Sessão atual',
     'dashboard.farm.start': 'Iniciar Farm',
     'dashboard.farm.stop': 'Parar Farm',
+    'dashboard.games.loadLibrary': 'Meus Jogos',
+    'settings.title': 'Configurações',
+    'settings.runStartup': 'Iniciar com o Windows',
+    'settings.autoFarm': 'Iniciar Farm automaticamente após login',
+    'settings.close': 'Salvar e Fechar',
+    'library.title': 'Meus Jogos da Steam',
+    'library.search': 'Pesquisar jogo...',
     'error.invalidPassword': 'Senha incorreta. Verifique as credenciais.',
     'error.rateLimit': 'Muitas tentativas. Aguarde alguns minutos.',
     'error.generic': 'Erro ao conectar. Tente novamente.',
@@ -74,6 +81,13 @@ const i18n = {
     'dashboard.farm.sessionTime': 'Current session',
     'dashboard.farm.start': 'Start Farming',
     'dashboard.farm.stop': 'Stop Farming',
+    'dashboard.games.loadLibrary': 'My Games',
+    'settings.title': 'Settings',
+    'settings.runStartup': 'Run on Windows Startup',
+    'settings.autoFarm': 'Start farming automatically after login',
+    'settings.close': 'Save and Close',
+    'library.title': 'My Steam Games',
+    'library.search': 'Search game...',
     'error.invalidPassword': 'Wrong password. Check your credentials.',
     'error.rateLimit': 'Too many attempts. Wait a few minutes.',
     'error.generic': 'Connection error. Try again.',
@@ -104,10 +118,14 @@ const dom = {
   totalHours: $('total-hours'), gameCount: $('game-count'), sessionTime: $('session-time'),
   btnFarm: $('btn-farm'), btnFarmText: $('btn-farm-text'), farmIconPlay: $('farm-icon-play'), farmIconStop: $('farm-icon-stop'),
   btnLang: $('btn-lang'), btnMinimize: $('btn-minimize'), btnClose: $('btn-close'),
-  btnTheme: $('btn-theme'), themeDropdown: $('theme-dropdown')
+  btnTheme: $('btn-theme'), themeDropdown: $('theme-dropdown'),
+  btnSettings: $('btn-settings'), modalSettings: $('modal-settings'), btnSettingsClose: $('btn-settings-close'),
+  checkRunStartup: $('check-run-startup'), checkAutoFarm: $('check-auto-farm'),
+  btnLoadLibrary: $('btn-load-library'), modalLibrary: $('modal-library'), btnLibraryClose: $('btn-library-close'),
+  inputLibrarySearch: $('input-library-search'), libraryList: $('library-list'), libraryLoading: $('library-loading')
 };
 
-let state = { games: [], farmHours: {}, isFarming: false, sessionStart: null, sessionInterval: null, searchDebounce: null };
+let state = { games: [], farmHours: {}, isFarming: false, sessionStart: null, sessionInterval: null, searchDebounce: null, libraryGames: [] };
 
 function getGameImage(appId) {
   return `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${appId}/capsule_231x87.jpg`;
@@ -412,6 +430,53 @@ function applyTheme(theme) {
 }
 
 function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+
+// ========== SETTINGS ==========
+dom.btnSettings.addEventListener('click', async () => {
+  dom.checkRunStartup.checked = await window.phantom.getRunOnStartup();
+  dom.checkAutoFarm.checked = await window.phantom.getAutoStartFarm();
+  dom.modalSettings.classList.remove('hidden');
+});
+
+dom.btnSettingsClose.addEventListener('click', async () => {
+  await window.phantom.setRunOnStartup(dom.checkRunStartup.checked);
+  await window.phantom.setAutoStartFarm(dom.checkAutoFarm.checked);
+  dom.modalSettings.classList.add('hidden');
+});
+
+// ========== LIBRARY ==========
+dom.btnLoadLibrary.addEventListener('click', async () => {
+  dom.modalLibrary.classList.remove('hidden');
+  dom.libraryList.innerHTML = '';
+  dom.libraryLoading.classList.remove('hidden');
+  dom.inputLibrarySearch.value = '';
+  
+  state.libraryGames = await window.phantom.getOwnedGames();
+  dom.libraryLoading.classList.add('hidden');
+  renderLibraryList(state.libraryGames);
+});
+
+dom.btnLibraryClose.addEventListener('click', () => {
+  dom.modalLibrary.classList.add('hidden');
+});
+
+dom.inputLibrarySearch.addEventListener('input', () => {
+  const query = dom.inputLibrarySearch.value.trim().toLowerCase();
+  if (!query) renderLibraryList(state.libraryGames);
+  else renderLibraryList(state.libraryGames.filter(g => g.name.toLowerCase().includes(query)));
+});
+
+function renderLibraryList(games) {
+  dom.libraryList.innerHTML = '';
+  games.forEach(game => {
+    const imgUrl = getGameImage(game.appId);
+    const el = document.createElement('div');
+    el.className = 'library-item';
+    el.innerHTML = `<img class="library-item-icon" src="${imgUrl}" alt="" onerror="this.style.display='none'"><div class="library-item-name">${escapeHtml(game.name)}</div>`;
+    el.addEventListener('click', () => { addGame({ appId: game.appId, name: game.name, icon: imgUrl }); });
+    dom.libraryList.appendChild(el);
+  });
+}
 
 // ========== INIT ==========
 (async function init() {

@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('phantom', {
   logout: () => ipcRenderer.invoke('steam:logout'),
   getStatus: () => ipcRenderer.invoke('steam:get-status'),
   searchGames: (query) => ipcRenderer.invoke('steam:search-games', query),
+  getOwnedGames: () => ipcRenderer.invoke('steam:get-owned-games'),
 
   // Settings
   getGames: () => ipcRenderer.invoke('settings:get-games'),
@@ -30,6 +31,10 @@ contextBridge.exposeInMainWorld('phantom', {
   getFarmHours: () => ipcRenderer.invoke('settings:get-farm-hours'),
   getTheme: () => ipcRenderer.invoke('settings:get-theme'),
   setTheme: (theme) => ipcRenderer.invoke('settings:set-theme', theme),
+  getRunOnStartup: () => ipcRenderer.invoke('settings:get-run-on-startup'),
+  setRunOnStartup: (val) => ipcRenderer.invoke('settings:set-run-on-startup', val),
+  getAutoStartFarm: () => ipcRenderer.invoke('settings:get-auto-start-farm'),
+  setAutoStartFarm: (val) => ipcRenderer.invoke('settings:set-auto-start-farm', val),
 
   // Events
   onFarmTick: (cb) => ipcRenderer.on('steam:farm-tick', (_e, data) => cb(data)),

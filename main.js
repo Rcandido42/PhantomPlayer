@@ -199,6 +199,20 @@ function setupIPC() {
   ipcMain.handle('settings:get-farm-hours', async () => settings.getFarmHours());
   ipcMain.handle('settings:get-theme', async () => settings.getTheme());
   ipcMain.handle('settings:set-theme', async (_e, t) => { settings.setTheme(t); return { success: true }; });
+  ipcMain.handle('settings:get-run-on-startup', async () => settings.getRunOnStartup());
+  ipcMain.handle('settings:set-run-on-startup', async (_e, val) => {
+    settings.setRunOnStartup(val);
+    app.setLoginItemSettings({ openAtLogin: val });
+    return { success: true };
+  });
+  ipcMain.handle('settings:get-auto-start-farm', async () => settings.getAutoStartFarm());
+  ipcMain.handle('settings:set-auto-start-farm', async (_e, val) => {
+    settings.setAutoStartFarm(val);
+    return { success: true };
+  });
+
+  // --- Owned Games ---
+  ipcMain.handle('steam:get-owned-games', async () => steamClient.getOwnedGames());
 
   // --- Window ---
   ipcMain.on('window:minimize', () => { if (mainWindow) mainWindow.minimize(); });
@@ -211,8 +225,23 @@ function setupSteamEvents() {
     updateTrayMenu();
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('steam:disconnected', data);
   });
+  
+  steamClient.on('logged-on', () => {
+    if (settings.getAutoStartFarm()) {
+      const g = settings.getGames();
+      if (g.length > 0) startFarming(g.map(x => x.appId));
+    }
+  });
 }
 
-app.whenReady().then(() => { settings = new Settings(); steamClient = new SteamClient(); createWindow(); createTray(); setupIPC(); setupSteamEvents(); });
+app.whenReady().then(() => { 
+  settings = new Settings(); 
+  steamClient = new SteamClient(); 
+  app.setLoginItemSettings({ openAtLogin: settings.getRunOnStartup() });
+  createWindow(); 
+  createTray(); 
+  setupIPC(); 
+  setupSteamEvents(); 
+});
 app.on('window-all-closed', () => {});
 app.on('before-quit', () => { app.isQuitting = true; if (steamClient?.isLoggedIn) { if (steamClient.isFarming) stopFarming(); steamClient.logout(); } });

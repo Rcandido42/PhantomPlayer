@@ -63,6 +63,12 @@ class Settings {
 
   getFarmHours() { return this.store.get('farmHours', {}); }
   getGameHours(appId) { const data = this.store.get('farmHours', {}); return data[String(appId)] || 0; }
+
+  getRunOnStartup() { return this.store.get('runOnStartup', false); }
+  setRunOnStartup(value) { this.store.set('runOnStartup', value); }
+
+  getAutoStartFarm() { return this.store.get('autoStartFarm', false); }
+  setAutoStartFarm(value) { this.store.set('autoStartFarm', value); }
 }
 
 module.exports = Settings;
