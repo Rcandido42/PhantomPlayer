@@ -64,6 +64,10 @@ class Settings {
   getFarmHours() { return this.store.get('farmHours', {}); }
   getGameHours(appId) { const data = this.store.get('farmHours', {}); return data[String(appId)] || 0; }
 
+  getGoals() { return this.store.get('goals', {}); }
+  setGoal(appId, hours) { const g = this.store.get('goals', {}); g[String(appId)] = hours; this.store.set('goals', g); }
+  removeGoal(appId) { const g = this.store.get('goals', {}); delete g[String(appId)]; this.store.set('goals', g); }
+
   getRunOnStartup() { return this.store.get('runOnStartup', false); }
   setRunOnStartup(value) { this.store.set('runOnStartup', value); }
 

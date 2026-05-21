@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('phantom', {
   getStatus: () => ipcRenderer.invoke('steam:get-status'),
   searchGames: (query) => ipcRenderer.invoke('steam:search-games', query),
   getOwnedGames: () => ipcRenderer.invoke('steam:get-owned-games'),
+  autoLogin: () => ipcRenderer.invoke('steam:auto-login'),
 
   // Settings
   getGames: () => ipcRenderer.invoke('settings:get-games'),
@@ -35,6 +36,13 @@ contextBridge.exposeInMainWorld('phantom', {
   setRunOnStartup: (val) => ipcRenderer.invoke('settings:set-run-on-startup', val),
   getAutoStartFarm: () => ipcRenderer.invoke('settings:get-auto-start-farm'),
   setAutoStartFarm: (val) => ipcRenderer.invoke('settings:set-auto-start-farm', val),
+  getGoals: () => ipcRenderer.invoke('settings:get-goals'),
+  setGoal: (appId, hours) => ipcRenderer.invoke('settings:set-goal', appId, hours),
+  removeGoal: (appId) => ipcRenderer.invoke('settings:remove-goal', appId),
+
+  // App
+  checkForUpdates: () => ipcRenderer.invoke('app:check-for-updates'),
+  openExternal: (url) => ipcRenderer.invoke('app:open-external', url),
 
   // Events
   onFarmTick: (cb) => ipcRenderer.on('steam:farm-tick', (_e, data) => cb(data)),

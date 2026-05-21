@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, shell } = require('electron');
 const path = require('path');
 const https = require('https');
 const QRCode = require('qrcode');
@@ -214,6 +214,28 @@ function setupIPC() {
   // --- Owned Games ---
   ipcMain.handle('steam:get-owned-games', async () => steamClient.getOwnedGames());
 
+  // --- Auto Login ---
+  ipcMain.handle('steam:auto-login', async () => {
+    const token = settings.getRefreshToken();
+    if (!token) return { success: false, reason: 'no-token' };
+    return new Promise((resolve) => {
+      const onLogged = (data) => { cleanup(); resolve({ success: true, steamId: data.steamId }); };
+      const onError = (data) => { cleanup(); settings.clearRefreshToken(); resolve({ success: false, reason: 'token-expired', error: data.message }); };
+      function cleanup() { steamClient.removeListener('logged-on', onLogged); steamClient.removeListener('error', onError); }
+      steamClient.on('logged-on', onLogged); steamClient.on('error', onError);
+      steamClient.loginWithToken(token);
+    });
+  });
+
+  // --- Goals ---
+  ipcMain.handle('settings:get-goals', async () => settings.getGoals());
+  ipcMain.handle('settings:set-goal', async (_e, appId, hours) => { settings.setGoal(appId, hours); return { success: true }; });
+  ipcMain.handle('settings:remove-goal', async (_e, appId) => { settings.removeGoal(appId); return { success: true }; });
+
+  // --- Auto Update ---
+  ipcMain.handle('app:check-for-updates', async () => checkForUpdates());
+  ipcMain.handle('app:open-external', async (_e, url) => { shell.openExternal(url); return { success: true }; });
+
   // --- Window ---
   ipcMain.on('window:minimize', () => { if (mainWindow) mainWindow.minimize(); });
   ipcMain.on('window:close', () => { if (mainWindow) mainWindow.hide(); });
@@ -245,3 +267,26 @@ app.whenReady().then(() => {
 });
 app.on('window-all-closed', () => {});
 app.on('before-quit', () => { app.isQuitting = true; if (steamClient?.isLoggedIn) { if (steamClient.isFarming) stopFarming(); steamClient.logout(); } });
+
+function checkForUpdates() {
+  const currentVersion = app.getVersion();
+  return new Promise((resolve) => {
+    https.get('https://api.github.com/repos/Rcandido42/PhantomPlayer/releases/latest', {
+      headers: { 'User-Agent': 'PhantomPlayer' }
+    }, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const release = JSON.parse(data);
+          const latestVersion = (release.tag_name || '').replace(/^v/, '');
+          if (latestVersion && latestVersion !== currentVersion) {
+            resolve({ updateAvailable: true, currentVersion, latestVersion, downloadUrl: release.html_url });
+          } else {
+            resolve({ updateAvailable: false, currentVersion });
+          }
+        } catch { resolve({ updateAvailable: false, currentVersion }); }
+      });
+    }).on('error', () => resolve({ updateAvailable: false, currentVersion }));
+  });
+}

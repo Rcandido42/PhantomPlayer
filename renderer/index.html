@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' https://shared.akamai.steamstatic.com https://store.steampowered.com https://cdn.akamai.steamstatic.com data:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://api.github.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' https://shared.akamai.steamstatic.com https://store.steampowered.com https://cdn.akamai.steamstatic.com data:;">
   <title>PhantomPlayer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -199,6 +199,29 @@
     </div>
   </div>
 
+  <!-- ========== MODAL GOAL ========== -->
+  <div id="modal-goal" class="modal hidden">
+    <div class="modal-overlay" id="overlay-goal"></div>
+    <div class="modal-card glass">
+      <div class="modal-header">
+        <svg class="modal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        <h2 data-i18n="goals.title">Definir Meta</h2>
+      </div>
+      <p id="goal-game-name" class="modal-message"></p>
+      <div class="input-group">
+        <label data-i18n="goals.label">Horas objetivo</label>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <input type="number" id="input-goal-hours" min="1" max="10000" placeholder="100">
+        </div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button id="btn-goal-save" class="btn-primary" style="flex:1;"><span data-i18n="goals.save">Guardar</span></button>
+        <button id="btn-goal-remove" class="btn-small btn-outline" style="height:44px; flex:0 0 auto; padding:0 16px;"><span data-i18n="goals.remove">Remover</span></button>
+      </div>
+    </div>
+  </div>
+
   <!-- ========== DASHBOARD ========== -->
   <main id="screen-dashboard" class="screen hidden">
     <div class="status-bar glass">
@@ -248,6 +271,12 @@
             <span class="stat-value" id="session-time">00:00:00</span>
             <span class="stat-label" data-i18n="dashboard.farm.sessionTime">Sessão atual</span>
           </div>
+        </div>
+        <div id="stats-chart" class="stats-chart glass"></div>
+        <div id="update-banner" class="update-banner hidden">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="update-text"></span>
+          <button id="btn-update" class="btn-small btn-accent">Download</button>
         </div>
         <button id="btn-farm" class="btn-farm" disabled>
           <div class="btn-farm-inner">
