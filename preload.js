@@ -39,6 +39,13 @@ contextBridge.exposeInMainWorld('phantom', {
   getGoals: () => ipcRenderer.invoke('settings:get-goals'),
   setGoal: (appId, hours) => ipcRenderer.invoke('settings:set-goal', appId, hours),
   removeGoal: (appId) => ipcRenderer.invoke('settings:remove-goal', appId),
+  getWeeklyHours: () => ipcRenderer.invoke('settings:get-weekly-hours'),
+  getRotationEnabled: () => ipcRenderer.invoke('settings:get-rotation-enabled'),
+  setRotationEnabled: (val) => ipcRenderer.invoke('settings:set-rotation-enabled', val),
+  getRotationInterval: () => ipcRenderer.invoke('settings:get-rotation-interval'),
+  setRotationInterval: (val) => ipcRenderer.invoke('settings:set-rotation-interval', val),
+  getUnlockedAchievements: () => ipcRenderer.invoke('settings:get-unlocked-achievements'),
+  unlockAchievement: (id) => ipcRenderer.invoke('settings:unlock-achievement', id),
 
   // App
   checkForUpdates: () => ipcRenderer.invoke('app:check-for-updates'),
@@ -48,6 +55,8 @@ contextBridge.exposeInMainWorld('phantom', {
   onFarmTick: (cb) => ipcRenderer.on('steam:farm-tick', (_e, data) => cb(data)),
   onFarmingStopped: (cb) => ipcRenderer.on('steam:farming-stopped', () => cb()),
   onDisconnected: (cb) => ipcRenderer.on('steam:disconnected', (_e, data) => cb(data)),
+  onLog: (cb) => ipcRenderer.on('app:log', (_e, data) => cb(data)),
+  onAchievementUnlocked: (cb) => ipcRenderer.on('app:achievement-unlocked', (_e, data) => cb(data)),
 
   // Window
   minimizeWindow: () => ipcRenderer.send('window:minimize'),

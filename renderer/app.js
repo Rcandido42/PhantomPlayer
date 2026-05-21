@@ -52,7 +52,14 @@ const i18n = {
     'error.invalidPassword': 'Senha incorreta. Verifique as credenciais.',
     'error.rateLimit': 'Muitas tentativas. Aguarde alguns minutos.',
     'error.generic': 'Erro ao conectar. Tente novamente.',
-    'error.disconnected': 'Desconectado da Steam.'
+    'error.disconnected': 'Desconectado da Steam.',
+    'settings.rotationEnabled': 'Ativar Rotação de Jogos',
+    'settings.rotationInterval': 'Intervalo de Rotação (minutos)',
+    'dashboard.stats.games': 'Jogos',
+    'dashboard.stats.weekly': 'Semana',
+    'dashboard.achievements': 'Conquistas',
+    'achievements.title': 'Conquistas',
+    'logs.title': 'Consola de Logs'
   },
   en: {
     'login.subtitle': 'Log in to your Steam account',
@@ -107,7 +114,14 @@ const i18n = {
     'error.invalidPassword': 'Wrong password. Check your credentials.',
     'error.rateLimit': 'Too many attempts. Wait a few minutes.',
     'error.generic': 'Connection error. Try again.',
-    'error.disconnected': 'Disconnected from Steam.'
+    'error.disconnected': 'Disconnected from Steam.',
+    'settings.rotationEnabled': 'Enable Game Rotation',
+    'settings.rotationInterval': 'Rotation Interval (minutes)',
+    'dashboard.stats.games': 'Games',
+    'dashboard.stats.weekly': 'Weekly',
+    'dashboard.achievements': 'Achievements',
+    'achievements.title': 'Achievements',
+    'logs.title': 'Log Console'
   }
 };
 
@@ -142,7 +156,26 @@ const dom = {
   modalGoal: $('modal-goal'), goalGameName: $('goal-game-name'), inputGoalHours: $('input-goal-hours'),
   btnGoalSave: $('btn-goal-save'), btnGoalRemove: $('btn-goal-remove'),
   statsChart: $('stats-chart'),
-  updateBanner: $('update-banner'), updateText: $('update-text'), btnUpdate: $('btn-update')
+  updateBanner: $('update-banner'), updateText: $('update-text'), btnUpdate: $('btn-update'),
+
+  // Premium v2.2 Elements
+  checkRotation: $('check-rotation'),
+  inputRotationInterval: $('input-rotation-interval'),
+  btnAchievements: $('btn-achievements'),
+  modalAchievements: $('modal-achievements'),
+  btnAchievementsClose: $('btn-achievements-close'),
+  achievementsListEl: $('achievements-list'),
+  tabStatsGames: $('tab-stats-games'),
+  tabStatsWeekly: $('tab-stats-weekly'),
+  weeklyChart: $('weekly-chart'),
+  logDrawer: $('log-drawer'),
+  logDrawerHeader: $('log-drawer-header'),
+  btnLogCopy: $('btn-log-copy'),
+  btnLogClear: $('btn-log-clear'),
+  btnLogToggle: $('btn-log-toggle'),
+  logConsole: $('log-console'),
+  logToggleIcon: $('log-toggle-icon'),
+  dynamicWallpaper: $('dynamic-wallpaper')
 };
 
 let state = { games: [], farmHours: {}, goals: {}, isFarming: false, sessionStart: null, sessionInterval: null, searchDebounce: null, libraryGames: [], goalEditAppId: null, updateUrl: null };
@@ -263,7 +296,16 @@ async function updateDashboard() {
   const status = await window.phantom.getStatus();
   state.farmHours = await window.phantom.getFarmHours();
   dom.steamId.textContent = status.steamId || '';
-  updateStats(); updateFarmButton();
+  state.isFarming = status.isFarming;
+  if (state.isFarming) {
+    if (!state.sessionInterval) startSessionTimer();
+  } else {
+    stopSessionTimer();
+  }
+  updateStats();
+  updateFarmButton();
+  updateDynamicWallpaper();
+  checkAchievements();
 }
 
 function updateStats() {
@@ -289,8 +331,21 @@ function updateFarmButton() {
 
 // ========== FARM ==========
 dom.btnFarm.addEventListener('click', async () => {
-  if (state.isFarming) { await window.phantom.stopFarm(); state.isFarming = false; stopSessionTimer(); }
-  else { const ids = state.games.map(g => g.appId); if (!ids.length) return; await window.phantom.startFarm(ids); state.isFarming = true; startSessionTimer(); }
+  if (state.isFarming) { 
+    await window.phantom.stopFarm(); 
+    state.isFarming = false; 
+    stopSessionTimer(); 
+    updateDynamicWallpaper();
+  }
+  else { 
+    const ids = state.games.map(g => g.appId); 
+    if (!ids.length) return; 
+    await window.phantom.startFarm(ids); 
+    state.isFarming = true; 
+    startSessionTimer(); 
+    updateDynamicWallpaper();
+    checkAchievements();
+  }
   updateFarmButton();
 });
 
@@ -304,15 +359,40 @@ function startSessionTimer() {
 
 function stopSessionTimer() { clearInterval(state.sessionInterval); state.sessionInterval = null; state.sessionStart = null; dom.sessionTime.textContent = '00:00:00'; }
 
-window.phantom.onFarmTick((data) => { state.farmHours = data.farmHours; updateStats(); renderGameList(); renderStatsChart(); });
-window.phantom.onFarmingStopped(() => { state.isFarming = false; stopSessionTimer(); updateFarmButton(); });
+window.phantom.onFarmTick((data) => { 
+  state.farmHours = data.farmHours; 
+  updateStats(); 
+  renderGameList(); 
+  if (dom.tabStatsWeekly.classList.contains('active')) {
+    renderWeeklyChart();
+  } else {
+    renderStatsChart();
+  }
+  checkAchievements();
+  updateDynamicWallpaper();
+});
+window.phantom.onFarmingStopped(() => { 
+  state.isFarming = false; 
+  stopSessionTimer(); 
+  updateFarmButton(); 
+  updateDynamicWallpaper();
+});
 
 // ========== GAMES ==========
 async function loadGames() {
   state.games = await window.phantom.getGames();
   state.farmHours = await window.phantom.getFarmHours();
   state.goals = await window.phantom.getGoals();
-  renderGameList(); updateStats(); updateFarmButton(); renderStatsChart();
+  renderGameList(); 
+  updateStats(); 
+  updateFarmButton(); 
+  if (dom.tabStatsWeekly.classList.contains('active')) {
+    renderWeeklyChart();
+  } else {
+    renderStatsChart();
+  }
+  updateDynamicWallpaper();
+  checkAchievements();
 }
 
 function renderGameList() {
@@ -362,12 +442,14 @@ async function addGame(game) {
   state.games.push(game);
   await window.phantom.saveGames(state.games);
   renderGameList(); updateStats(); updateFarmButton();
+  checkAchievements();
 }
 
 async function removeGame(appId) {
   state.games = state.games.filter(g => g.appId !== appId);
   await window.phantom.saveGames(state.games);
   renderGameList(); updateStats(); updateFarmButton();
+  checkAchievements();
 }
 
 dom.btnAddGame.addEventListener('click', () => {
@@ -467,12 +549,32 @@ function escapeHtml(text) { const div = document.createElement('div'); div.textC
 dom.btnSettings.addEventListener('click', async () => {
   dom.checkRunStartup.checked = await window.phantom.getRunOnStartup();
   dom.checkAutoFarm.checked = await window.phantom.getAutoStartFarm();
+  
+  const rotationEnabled = await window.phantom.getRotationEnabled();
+  const rotationInterval = await window.phantom.getRotationInterval();
+  dom.checkRotation.checked = rotationEnabled;
+  dom.inputRotationInterval.value = rotationInterval;
+  
+  const rotationIntervalGroup = $('rotation-interval-group');
+  if (rotationIntervalGroup) {
+    rotationIntervalGroup.style.display = rotationEnabled ? 'block' : 'none';
+  }
+  
   dom.modalSettings.classList.remove('hidden');
 });
 
 dom.btnSettingsClose.addEventListener('click', async () => {
   await window.phantom.setRunOnStartup(dom.checkRunStartup.checked);
   await window.phantom.setAutoStartFarm(dom.checkAutoFarm.checked);
+  
+  const rotationEnabled = dom.checkRotation.checked;
+  let rotationInterval = parseInt(dom.inputRotationInterval.value, 10);
+  if (isNaN(rotationInterval) || rotationInterval < 1) rotationInterval = 1;
+  if (rotationInterval > 1440) rotationInterval = 1440;
+  
+  await window.phantom.setRotationEnabled(rotationEnabled);
+  await window.phantom.setRotationInterval(rotationInterval);
+  
   dom.modalSettings.classList.add('hidden');
 });
 
@@ -550,6 +652,7 @@ dom.btnGoalSave.addEventListener('click', async () => {
   state.goals[String(goalEditAppId)] = hours;
   dom.modalGoal.classList.add('hidden');
   renderGameList();
+  checkAchievements();
 });
 
 dom.btnGoalRemove.addEventListener('click', async () => {
@@ -563,11 +666,334 @@ dom.btnGoalRemove.addEventListener('click', async () => {
 dom.inputGoalHours.addEventListener('keydown', (e) => { if (e.key === 'Enter') dom.btnGoalSave.click(); });
 
 // ========== INIT ==========
+// =============================================
+//    PREMIUM FEATURES (v2.2)
+// =============================================
+
+const achievementsList = [
+  {
+    id: 'FIRST_GAME',
+    badge: '🎮',
+    name: { pt: 'Primeiros Passos', en: 'First Steps' },
+    desc: { pt: 'Adicionou o seu primeiro jogo', en: 'Added your first game' }
+  },
+  {
+    id: 'FIRST_FARM',
+    badge: '⚡',
+    name: { pt: 'Iniciando a Jornada', en: 'Starting the Journey' },
+    desc: { pt: 'Iniciou o farming pela primeira vez', en: 'Started farming for the first time' }
+  },
+  {
+    id: 'HOURS_5',
+    badge: '🏃',
+    name: { pt: 'Maratonista', en: 'Marathoner' },
+    desc: { pt: 'Farme total superior a 5 horas', en: 'Total farming over 5 hours' }
+  },
+  {
+    id: 'NIGHT_OWL',
+    badge: '🦉',
+    name: { pt: 'Coruja da Noite', en: 'Night Owl' },
+    desc: { pt: 'Farmou de madrugada entre as 00:00 e as 05:00', en: 'Farmed during the night between 00:00 and 05:00' }
+  },
+  {
+    id: 'GOAL_COMPLETED',
+    badge: '⭐',
+    name: { pt: 'Meta Cumprida', en: 'Goal Completed' },
+    desc: { pt: 'Atingiu o objetivo de horas em qualquer jogo', en: 'Reached hours goal on any game' }
+  },
+  {
+    id: 'COLLECTOR_10',
+    badge: '👑',
+    name: { pt: 'Mestre Colecionador', en: 'Master Collector' },
+    desc: { pt: 'Adicionou 10 ou mais jogos à lista', en: 'Added 10 or more games to the list' }
+  }
+];
+
+function playAchievementSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'square';
+    osc1.frequency.setValueAtTime(523.25, ctx.currentTime);
+    gain1.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.15);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start();
+    osc1.stop(ctx.currentTime + 0.15);
+    
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
+    gain2.gain.setValueAtTime(0.08, ctx.currentTime + 0.08);
+    gain2.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.35);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(ctx.currentTime + 0.08);
+    osc2.stop(ctx.currentTime + 0.35);
+
+    const osc3 = ctx.createOscillator();
+    const gain3 = ctx.createGain();
+    osc3.type = 'triangle';
+    osc3.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16);
+    gain3.gain.setValueAtTime(0.12, ctx.currentTime + 0.16);
+    gain3.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.60);
+    osc3.connect(gain3);
+    gain3.connect(ctx.destination);
+    osc3.start(ctx.currentTime + 0.16);
+    osc3.stop(ctx.currentTime + 0.60);
+  } catch (err) {
+    console.error('Failed to play achievement sound:', err);
+  }
+}
+
+function showAchievementToast(achievement) {
+  const toast = document.createElement('div');
+  toast.className = 'achievement-toast';
+  
+  const name = achievement.name[currentLang] || achievement.name.pt;
+  
+  toast.innerHTML = `
+    <div class="achievement-toast-badge">${achievement.badge}</div>
+    <div class="achievement-toast-content">
+      <div class="achievement-toast-title">${currentLang === 'pt' ? 'CONQUISTA DESBLOQUEADA' : 'ACHIEVEMENT UNLOCKED'}</div>
+      <div class="achievement-toast-name">${escapeHtml(name)}</div>
+    </div>
+  `;
+  
+  document.body.appendChild(toast);
+  playAchievementSound();
+  
+  setTimeout(() => {
+    toast.style.animation = 'fadeOutUp 0.5s ease-in forwards';
+    setTimeout(() => toast.remove(), 500);
+  }, 4000);
+}
+
+async function checkAchievements() {
+  if (!window.phantom || !window.phantom.getUnlockedAchievements) return;
+  try {
+    const unlocked = await window.phantom.getUnlockedAchievements();
+    
+    const checkAndUnlock = async (id, condition) => {
+      if (!unlocked[id] && condition) {
+        await window.phantom.unlockAchievement(id);
+      }
+    };
+
+    await checkAndUnlock('FIRST_GAME', state.games.length >= 1);
+    await checkAndUnlock('FIRST_FARM', state.isFarming === true);
+    
+    const totalHours = Object.values(state.farmHours).reduce((sum, h) => sum + h, 0);
+    await checkAndUnlock('HOURS_5', totalHours >= 5);
+    
+    const hour = new Date().getHours();
+    await checkAndUnlock('NIGHT_OWL', state.isFarming && hour >= 0 && hour < 5);
+    
+    const completedGoal = state.games.some(game => {
+      const goal = state.goals[String(game.appId)];
+      if (!goal) return false;
+      const hours = state.farmHours[String(game.appId)] || 0;
+      return hours >= goal;
+    });
+    await checkAndUnlock('GOAL_COMPLETED', completedGoal);
+    
+    await checkAndUnlock('COLLECTOR_10', state.games.length >= 10);
+  } catch (err) {
+    console.error('Error checking achievements:', err);
+  }
+}
+
+async function openAchievementsModal() {
+  try {
+    const unlocked = await window.phantom.getUnlockedAchievements();
+    dom.achievementsListEl.innerHTML = '';
+    
+    achievementsList.forEach(achievement => {
+      const isUnlocked = !!unlocked[achievement.id];
+      const itemData = unlocked[achievement.id];
+      const name = achievement.name[currentLang] || achievement.name.pt;
+      const desc = achievement.desc[currentLang] || achievement.desc.pt;
+      
+      const el = document.createElement('div');
+      el.className = `achievement-item${isUnlocked ? ' unlocked' : ''}`;
+      
+      let dateHtml = '';
+      if (isUnlocked && itemData && itemData.date) {
+        const d = new Date(itemData.date);
+        dateHtml = `<span class="achievement-date">${d.toLocaleDateString()}</span>`;
+      }
+      
+      el.innerHTML = `
+        <div class="achievement-badge">${achievement.badge}</div>
+        <div class="achievement-info">
+          <div class="achievement-name">${escapeHtml(name)}</div>
+          <div class="achievement-desc">${escapeHtml(desc)}</div>
+        </div>
+        ${dateHtml}
+      `;
+      dom.achievementsListEl.appendChild(el);
+    });
+    
+    dom.modalAchievements.classList.remove('hidden');
+  } catch (err) {
+    console.error('Error loading achievements modal:', err);
+  }
+}
+
+async function updateDynamicWallpaper() {
+  if (state.isFarming) {
+    try {
+      const status = await window.phantom.getStatus();
+      if (status && status.currentGames && status.currentGames.length > 0) {
+        const activeAppId = status.currentGames[0];
+        dom.dynamicWallpaper.style.backgroundImage = `url(https://cdn.akamai.steamstatic.com/steam/apps/${activeAppId}/page_bg_generated_v6b.jpg)`;
+        dom.dynamicWallpaper.classList.add('active');
+      }
+    } catch (err) {
+      console.error('Error updating dynamic wallpaper:', err);
+    }
+  } else {
+    dom.dynamicWallpaper.classList.remove('active');
+  }
+}
+
+async function renderWeeklyChart() {
+  try {
+    const weeklyHours = await window.phantom.getWeeklyHours();
+    dom.weeklyChart.innerHTML = '';
+    
+    const dayIndices = [1, 2, 3, 4, 5, 6, 0];
+    const labels = {
+      pt: ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'],
+      en: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+    };
+    
+    const currentLabels = labels[currentLang] || labels.pt;
+    
+    const values = dayIndices.map(day => weeklyHours[String(day)] || 0);
+    const maxHours = Math.max(...values, 0.1);
+    
+    dayIndices.forEach((day, index) => {
+      const hours = weeklyHours[String(day)] || 0;
+      const pct = Math.min((hours / maxHours) * 100, 100);
+      
+      const col = document.createElement('div');
+      col.className = 'weekly-bar-col';
+      col.innerHTML = `
+        <span class="weekly-bar-value">${hours > 0 ? hours.toFixed(1) + 'h' : '-'}</span>
+        <div class="weekly-bar-track">
+          <div class="weekly-bar-fill" style="height: 0%"></div>
+        </div>
+        <span class="weekly-bar-label">${currentLabels[index]}</span>
+      `;
+      
+      dom.weeklyChart.appendChild(col);
+      
+      requestAnimationFrame(() => {
+        const fill = col.querySelector('.weekly-bar-fill');
+        if (fill) fill.style.height = `${pct}%`;
+      });
+    });
+  } catch (err) {
+    console.error('Error rendering weekly chart:', err);
+  }
+}
+
+function switchStatsTab(tab) {
+  dom.tabStatsGames.classList.toggle('active', tab === 'games');
+  dom.tabStatsWeekly.classList.toggle('active', tab === 'weekly');
+  
+  if (tab === 'games') {
+    dom.statsChart.classList.remove('hidden');
+    dom.weeklyChart.classList.add('hidden');
+    renderStatsChart();
+  } else {
+    dom.statsChart.classList.add('hidden');
+    dom.weeklyChart.classList.remove('hidden');
+    renderWeeklyChart();
+  }
+}
+
+function toggleLogDrawer() {
+  const isCollapsed = dom.logDrawer.classList.toggle('collapsed');
+  if (dom.logToggleIcon) {
+    dom.logToggleIcon.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+}
+
+function setupPremium() {
+  window.phantom.onLog(({ level, message, timestamp }) => {
+    const el = document.createElement('div');
+    el.className = `log-entry ${level}`;
+    el.innerHTML = `
+      <span class="log-time">[${timestamp}]</span>
+      <span class="log-msg">${escapeHtml(message)}</span>
+    `;
+    dom.logConsole.appendChild(el);
+    dom.logConsole.scrollTop = dom.logConsole.scrollHeight;
+  });
+
+  window.phantom.onAchievementUnlocked(({ id }) => {
+    const achievement = achievementsList.find(a => a.id === id);
+    if (achievement) {
+      showAchievementToast(achievement);
+    }
+  });
+
+  dom.logDrawerHeader.addEventListener('click', toggleLogDrawer);
+  dom.btnLogToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleLogDrawer();
+  });
+  
+  dom.btnLogClear.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dom.logConsole.innerHTML = '';
+  });
+
+  dom.btnLogCopy.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const logsText = Array.from(dom.logConsole.querySelectorAll('.log-entry'))
+      .map(el => {
+        const time = el.querySelector('.log-time').textContent;
+        const msg = el.querySelector('.log-msg').textContent;
+        return `${time} ${msg}`;
+      })
+      .join('\n');
+    navigator.clipboard.writeText(logsText);
+  });
+
+  dom.btnAchievements.addEventListener('click', openAchievementsModal);
+  dom.btnAchievementsClose.addEventListener('click', () => dom.modalAchievements.classList.add('hidden'));
+  
+  const overlayAchievements = $('overlay-achievements');
+  if (overlayAchievements) {
+    overlayAchievements.addEventListener('click', () => dom.modalAchievements.classList.add('hidden'));
+  }
+
+  dom.tabStatsGames.addEventListener('click', () => switchStatsTab('games'));
+  dom.tabStatsWeekly.addEventListener('click', () => switchStatsTab('weekly'));
+
+  dom.checkRotation.addEventListener('change', () => {
+    const group = $('rotation-interval-group');
+    if (group) group.style.display = dom.checkRotation.checked ? 'block' : 'none';
+  });
+}
+
+// ========== INIT ==========
 (async function init() {
   currentLang = await window.phantom.getLanguage() || 'pt';
   applyTranslations();
   const savedTheme = await window.phantom.getTheme() || 'phantom';
   applyTheme(savedTheme);
+
+  setupPremium();
 
   const overlay = document.createElement('div');
   overlay.className = 'auto-login-overlay';

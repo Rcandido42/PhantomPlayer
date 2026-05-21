@@ -14,6 +14,18 @@ let farmInterval = null;
 let farmStartTime = null;
 let qrSession = null;
 
+// Rotation variables
+let rotationIntervalTimer = null;
+let rotationGameIds = [];
+let currentRotationIndex = 0;
+
+function logToClient(level, message) {
+  const timestamp = new Date().toLocaleTimeString();
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('app:log', { level, message, timestamp });
+  }
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 920, height: 640, frame: false, resizable: false,
@@ -52,7 +64,45 @@ function updateTrayMenu() {
 }
 
 function startFarming(gameIds) {
-  steamClient.startFarm(gameIds);
+  const rotationEnabled = settings.getRotationEnabled();
+  
+  if (rotationEnabled && gameIds.length > 0) {
+    rotationGameIds = gameIds;
+    currentRotationIndex = 0;
+    steamClient.startFarm([rotationGameIds[currentRotationIndex]]);
+    logToClient('info', `[Rotação] Iniciando farm cíclico. Jogo ativo: ID ${rotationGameIds[currentRotationIndex]}`);
+    
+    const intervalMs = settings.getRotationInterval() * 60 * 1000;
+    rotationIntervalTimer = setInterval(() => {
+      if (steamClient.isFarming && rotationGameIds.length > 1) {
+        logToClient('info', `[Rotação] Alternando jogo farmado...`);
+        
+        if (farmStartTime) {
+          const elapsed = (Date.now() - farmStartTime) / 3600000;
+          steamClient.currentGames.forEach(id => settings.addFarmTime(id, elapsed));
+        }
+        
+        currentRotationIndex = (currentRotationIndex + 1) % rotationGameIds.length;
+        const nextGameId = rotationGameIds[currentRotationIndex];
+        
+        steamClient.stopFarm();
+        
+        setTimeout(() => {
+          if (farmInterval) {
+            steamClient.startFarm([nextGameId]);
+            farmStartTime = Date.now();
+            logToClient('success', `[Rotação] Farm alterado com sucesso para o jogo ID: ${nextGameId}`);
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.send('steam:farm-tick', { farmHours: settings.getFarmHours() });
+            }
+          }
+        }, 1500);
+      }
+    }, intervalMs);
+  } else {
+    steamClient.startFarm(gameIds);
+  }
+
   farmStartTime = Date.now();
   farmInterval = setInterval(() => {
     if (steamClient.isFarming && farmStartTime) {
@@ -70,6 +120,14 @@ function stopFarming() {
     const elapsed = (Date.now() - farmStartTime) / 3600000;
     steamClient.currentGames.forEach(id => settings.addFarmTime(id, elapsed));
   }
+  
+  if (rotationIntervalTimer) {
+    clearInterval(rotationIntervalTimer);
+    rotationIntervalTimer = null;
+  }
+  rotationGameIds = [];
+  currentRotationIndex = 0;
+
   steamClient.stopFarm();
   clearInterval(farmInterval);
   farmInterval = null;
@@ -232,6 +290,25 @@ function setupIPC() {
   ipcMain.handle('settings:set-goal', async (_e, appId, hours) => { settings.setGoal(appId, hours); return { success: true }; });
   ipcMain.handle('settings:remove-goal', async (_e, appId) => { settings.removeGoal(appId); return { success: true }; });
 
+  // --- Weekly tracking ---
+  ipcMain.handle('settings:get-weekly-hours', async () => settings.getWeeklyHours());
+
+  // --- Game Rotation ---
+  ipcMain.handle('settings:get-rotation-enabled', async () => settings.getRotationEnabled());
+  ipcMain.handle('settings:set-rotation-enabled', async (_e, val) => { settings.setRotationEnabled(val); return { success: true }; });
+  ipcMain.handle('settings:get-rotation-interval', async () => settings.getRotationInterval());
+  ipcMain.handle('settings:set-rotation-interval', async (_e, val) => { settings.setRotationInterval(val); return { success: true }; });
+
+  // --- Achievements ---
+  ipcMain.handle('settings:get-unlocked-achievements', async () => settings.getUnlockedAchievements());
+  ipcMain.handle('settings:unlock-achievement', async (_e, id) => {
+    const newlyUnlocked = settings.unlockAchievement(id);
+    if (newlyUnlocked && mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('app:achievement-unlocked', { id });
+    }
+    return newlyUnlocked;
+  });
+
   // --- Auto Update ---
   ipcMain.handle('app:check-for-updates', async () => checkForUpdates());
   ipcMain.handle('app:open-external', async (_e, url) => { shell.openExternal(url); return { success: true }; });
@@ -254,6 +331,8 @@ function setupSteamEvents() {
       if (g.length > 0) startFarming(g.map(x => x.appId));
     }
   });
+
+  steamClient.on('log', ({ level, message }) => logToClient(level, message));
 }
 
 app.whenReady().then(() => { 

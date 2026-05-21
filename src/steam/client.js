@@ -16,6 +16,7 @@ class SteamClient extends EventEmitter {
   _setupListeners() {
     this.client.on('steamGuard', (domain, callback) => {
       this.guardCallback = callback;
+      this.emit('log', { level: 'warn', message: 'Steam Guard requerido!' });
       this.emit('guard-required', { domain });
     });
 
@@ -23,12 +24,14 @@ class SteamClient extends EventEmitter {
       this.isLoggedIn = true;
       this.steamId = this.client.steamID.getSteamID64();
       this.client.setPersona(SteamUser.EPersonaState.Online);
+      this.emit('log', { level: 'success', message: `Autenticado com sucesso! ID: ${this.steamId}` });
       this.emit('logged-on', { steamId: this.steamId });
     });
 
     this.client.on('error', (err) => {
       this.isLoggedIn = false;
       this.isFarming = false;
+      this.emit('log', { level: 'error', message: `Erro na Steam: ${err.message}` });
       this.emit('error', { eresult: err.eresult, message: err.message });
     });
 
@@ -36,19 +39,23 @@ class SteamClient extends EventEmitter {
       this.isLoggedIn = false;
       this.isFarming = false;
       this.currentGames = [];
+      this.emit('log', { level: 'warn', message: `Desconectado da Steam. Código: ${eresult}` });
       this.emit('disconnected', { eresult, message: msg });
     });
   }
 
   login(username, password) {
+    this.emit('log', { level: 'info', message: `Tentando login com senha para utilizador "${username}"...` });
     this.client.logOn({ accountName: username, password: password });
   }
 
   loginWithToken(refreshToken) {
+    this.emit('log', { level: 'info', message: `Tentando login automático com token persistente...` });
     this.client.logOn({ refreshToken });
   }
 
   submitGuardCode(code) {
+    this.emit('log', { level: 'info', message: `Enviando código Steam Guard...` });
     if (this.guardCallback) {
       this.guardCallback(code.trim());
       this.guardCallback = null;
@@ -60,6 +67,7 @@ class SteamClient extends EventEmitter {
       this.client.gamesPlayed(gameIds);
       this.isFarming = true;
       this.currentGames = gameIds;
+      this.emit('log', { level: 'success', message: `Iniciando farm dos IDs: ${gameIds.join(', ')}` });
       this.emit('farming-started', { games: gameIds });
     }
   }
@@ -68,10 +76,12 @@ class SteamClient extends EventEmitter {
     this.client.gamesPlayed([]);
     this.isFarming = false;
     this.currentGames = [];
+    this.emit('log', { level: 'info', message: `Parando farm de jogos.` });
     this.emit('farming-stopped');
   }
 
   logout() {
+    this.emit('log', { level: 'warn', message: `Efetuando logout da conta Steam.` });
     this.stopFarm();
     this.client.logOff();
     this.isLoggedIn = false;

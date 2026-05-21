@@ -59,6 +59,7 @@ class Settings {
     const key = String(appId);
     data[key] = (data[key] || 0) + hours;
     this.store.set('farmHours', data);
+    this.addWeeklyHours(hours);
   }
 
   getFarmHours() { return this.store.get('farmHours', {}); }
@@ -73,6 +74,52 @@ class Settings {
 
   getAutoStartFarm() { return this.store.get('autoStartFarm', false); }
   setAutoStartFarm(value) { this.store.set('autoStartFarm', value); }
+
+  // --- Weekly tracking ---
+  getWeeklyHours() {
+    this._checkWeeklyReset();
+    return this.store.get('weeklyHours', { "0": 0, "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0 });
+  }
+
+  addWeeklyHours(hours) {
+    this._checkWeeklyReset();
+    const day = String(new Date().getDay()); // 0 = Sunday, 1 = Monday ... 6 = Saturday
+    const data = this.store.get('weeklyHours', { "0": 0, "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0 });
+    data[day] = (data[day] || 0) + hours;
+    this.store.set('weeklyHours', data);
+  }
+
+  _checkWeeklyReset() {
+    const lastReset = this.store.get('lastWeeklyReset');
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    if (!lastReset || new Date(lastReset) < startOfWeek) {
+      this.store.set('weeklyHours', { "0": 0, "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0 });
+      this.store.set('lastWeeklyReset', now.toISOString());
+    }
+  }
+
+  // --- Game Rotation ---
+  getRotationEnabled() { return this.store.get('rotationEnabled', false); }
+  setRotationEnabled(value) { this.store.set('rotationEnabled', value); }
+
+  getRotationInterval() { return this.store.get('rotationInterval', 15); }
+  setRotationInterval(value) { this.store.set('rotationInterval', value); }
+
+  // --- Achievements ---
+  getUnlockedAchievements() { return this.store.get('unlockedAchievements', {}); }
+  unlockAchievement(id) {
+    const data = this.store.get('unlockedAchievements', {});
+    if (!data[id]) {
+      data[id] = { unlocked: true, date: new Date().toISOString() };
+      this.store.set('unlockedAchievements', data);
+      return true; // Successfully unlocked now
+    }
+    return false; // Already unlocked
+  }
 }
 
 module.exports = Settings;
