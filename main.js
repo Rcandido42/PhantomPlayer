@@ -14,7 +14,6 @@ let farmInterval = null;
 let farmStartTime = null;
 let qrSession = null;
 
-// Rotation variables
 let rotationIntervalTimer = null;
 let rotationGameIds = [];
 let currentRotationIndex = 0;
