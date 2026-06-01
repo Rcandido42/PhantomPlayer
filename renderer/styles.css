@@ -1429,6 +1429,142 @@ body {
   margin-bottom: 25px;
 }
 
+/* =============================================
+   SETTINGS BLACKLIST STYLES
+   ============================================= */
+
+.settings-modal-card {
+  width: 440px;
+  max-width: 90vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 24px;
+}
+
+.settings-modal-card .settings-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+  max-height: 50vh;
+}
+
+/* Custom Scrollbar for Settings Content */
+.settings-modal-card .settings-content::-webkit-scrollbar {
+  width: 5px;
+}
+.settings-modal-card .settings-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 3px;
+}
+.settings-modal-card .settings-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+.settings-modal-card .settings-content::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-light);
+}
+
+.settings-divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0) 100%);
+  margin: 20px 0;
+}
+
+.settings-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-light);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.blacklist-add-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.blacklist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.blacklist-list::-webkit-scrollbar {
+  width: 4px;
+}
+.blacklist-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.blacklist-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.blacklist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 8px 12px;
+  transition: all var(--transition);
+}
+
+.blacklist-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.blacklist-item-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.blacklist-item-id {
+  font-family: monospace;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.blacklist-item-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.blacklist-item-remove {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+
+.blacklist-item-remove:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
 .library-card {
   width: 500px;
   max-width: 90vw;

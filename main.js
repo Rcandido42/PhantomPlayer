@@ -66,10 +66,25 @@ function updateTrayMenu() {
 }
 
 function startFarming(gameIds) {
+  const blacklist = settings.getBlacklist();
+  const cleanGameIds = gameIds.filter(id => !blacklist.includes(id));
+  const blockedCount = gameIds.length - cleanGameIds.length;
+  
+  if (blockedCount > 0) {
+    const blockedIds = gameIds.filter(id => blacklist.includes(id));
+    logToClient('error', `[Lista Negra] Farm bloqueado para jogo(s): ID(s) ${blockedIds.join(', ')}`);
+  }
+  
+  if (cleanGameIds.length === 0) {
+    logToClient('warn', `[Lista Negra] Farm não iniciado. Todos os jogos selecionados estão na lista negra.`);
+    stopFarming();
+    return;
+  }
+
   const rotationEnabled = settings.getRotationEnabled();
   
-  if (rotationEnabled && gameIds.length > 0) {
-    rotationGameIds = gameIds;
+  if (rotationEnabled && cleanGameIds.length > 0) {
+    rotationGameIds = cleanGameIds;
     currentRotationIndex = 0;
     steamClient.startFarm([rotationGameIds[currentRotationIndex]]);
     logToClient('info', `[Rotação] Iniciando farm cíclico. Jogo ativo: ID ${rotationGameIds[currentRotationIndex]}`);
@@ -102,7 +117,7 @@ function startFarming(gameIds) {
       }
     }, intervalMs);
   } else {
-    steamClient.startFarm(gameIds);
+    steamClient.startFarm(cleanGameIds);
   }
 
   farmStartTime = Date.now();
@@ -311,6 +326,25 @@ function setupIPC() {
     return newlyUnlocked;
   });
 
+  // --- Blacklist ---
+  ipcMain.handle('settings:get-blacklist', async () => settings.getBlacklist());
+  ipcMain.handle('settings:add-to-blacklist', async (_e, appId) => {
+    const success = settings.addGameToBlacklist(appId);
+    if (success && steamClient.isFarming && steamClient.currentGames.includes(appId)) {
+      const currentFarming = steamClient.currentGames;
+      stopFarming();
+      const updatedFarming = currentFarming.filter(id => id !== appId);
+      if (updatedFarming.length > 0) {
+        startFarming(updatedFarming);
+      }
+    }
+    return { success };
+  });
+  ipcMain.handle('settings:remove-from-blacklist', async (_e, appId) => {
+    const success = settings.removeGameFromBlacklist(appId);
+    return { success };
+  });
+
   // --- Card Advisor ---
   ipcMain.handle('steam:get-card-recommendations', async () => {
     if (!steamClient.isLoggedIn || !webSessionCookies) {
@@ -328,7 +362,10 @@ function setupIPC() {
         }
       });
 
-      return { success: true, recommendations };
+      const blacklist = settings.getBlacklist();
+      const filteredRecommendations = recommendations.filter(rec => !blacklist.includes(rec.appId));
+
+      return { success: true, recommendations: filteredRecommendations };
     } catch (err) {
       console.error('Card Advisor error:', err);
       return { error: err.message };

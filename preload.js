@@ -47,6 +47,11 @@ contextBridge.exposeInMainWorld('phantom', {
   getUnlockedAchievements: () => ipcRenderer.invoke('settings:get-unlocked-achievements'),
   unlockAchievement: (id) => ipcRenderer.invoke('settings:unlock-achievement', id),
 
+  // Blacklist
+  getBlacklist: () => ipcRenderer.invoke('settings:get-blacklist'),
+  addToBlacklist: (appId) => ipcRenderer.invoke('settings:add-to-blacklist', appId),
+  removeFromBlacklist: (appId) => ipcRenderer.invoke('settings:remove-from-blacklist', appId),
+
   // App
   checkForUpdates: () => ipcRenderer.invoke('app:check-for-updates'),
   openExternal: (url) => ipcRenderer.invoke('app:open-external', url),

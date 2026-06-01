@@ -120,6 +120,29 @@ class Settings {
     }
     return false; 
   }
+
+  // --- Blacklist ---
+  getBlacklist() { return this.store.get('blacklist', []); }
+  
+  addGameToBlacklist(appId) {
+    const list = this.getBlacklist();
+    if (!list.includes(appId)) {
+      list.push(appId);
+      this.store.set('blacklist', list);
+      return true;
+    }
+    return false;
+  }
+
+  removeGameFromBlacklist(appId) {
+    let list = this.getBlacklist();
+    if (list.includes(appId)) {
+      list = list.filter(id => id !== appId);
+      this.store.set('blacklist', list);
+      return true;
+    }
+    return false;
+  }
 }
 
 module.exports = Settings;

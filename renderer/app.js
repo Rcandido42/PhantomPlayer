@@ -70,7 +70,9 @@ const i18n = {
     'cards.avgPrice': 'Preço médio',
     'cards.profit': 'Lucro estimado',
     'cards.farm': 'Farmar',
-    'logs.title': 'Consola de Logs'
+    'logs.title': 'Consola de Logs',
+    'settings.blacklistTitle': 'Lista Negra de Jogos',
+    'settings.blacklistAdd': 'Bloquear'
   },
   en: {
     'login.subtitle': 'Log in to your Steam account',
@@ -143,7 +145,9 @@ const i18n = {
     'cards.avgPrice': 'Avg. price',
     'cards.profit': 'Est. profit',
     'cards.farm': 'Farm',
-    'logs.title': 'Log Console'
+    'logs.title': 'Log Console',
+    'settings.blacklistTitle': 'Games Blacklist',
+    'settings.blacklistAdd': 'Block'
   }
 };
 
@@ -206,7 +210,10 @@ const dom = {
   cardProgressFill: $('card-progress-fill'),
   cardProgressText: $('card-progress-text'),
   cardAdvisorList: $('card-advisor-list'),
-  cardAdvisorEmpty: $('card-advisor-empty')
+  cardAdvisorEmpty: $('card-advisor-empty'),
+  inputBlacklistAppId: $('input-blacklist-appid'),
+  btnBlacklistAdd: $('btn-blacklist-add'),
+  blacklistList: $('blacklist-list')
 };
 
 let state = { games: [], farmHours: {}, goals: {}, isFarming: false, sessionStart: null, sessionInterval: null, searchDebounce: null, libraryGames: [], goalEditAppId: null, updateUrl: null };
@@ -591,6 +598,7 @@ dom.btnSettings.addEventListener('click', async () => {
     rotationIntervalGroup.style.display = rotationEnabled ? 'block' : 'none';
   }
   
+  loadBlacklist();
   dom.modalSettings.classList.remove('hidden');
 });
 
@@ -1163,4 +1171,69 @@ dom.btnCardsClose.addEventListener('click', () => {
 
 dom.btnCardsRefresh.addEventListener('click', () => {
   startCardScan();
+});
+
+// ========== BLACKLIST ==========
+async function loadBlacklist() {
+  dom.blacklistList.innerHTML = '';
+  const blacklist = await window.phantom.getBlacklist() || [];
+  
+  if (blacklist.length === 0) {
+    const emptyEl = document.createElement('div');
+    emptyEl.style.cssText = 'font-size: 11px; color: rgba(255, 255, 255, 0.4); text-align: center; padding: 12px 0;';
+    emptyEl.textContent = currentLang === 'pt' ? 'Nenhum jogo bloqueado.' : 'No blocked games.';
+    dom.blacklistList.appendChild(emptyEl);
+    return;
+  }
+  
+  const ownedGames = state.libraryGames || [];
+  const nameMap = {};
+  ownedGames.forEach(g => {
+    nameMap[g.appId] = g.name;
+  });
+  
+  blacklist.forEach(appId => {
+    const name = nameMap[appId] || `App ${appId}`;
+    const el = document.createElement('div');
+    el.className = 'blacklist-item';
+    el.innerHTML = `
+      <div class="blacklist-item-info">
+        <span class="blacklist-item-id">${appId}</span>
+        <span class="blacklist-item-name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+      </div>
+      <button class="blacklist-item-remove" data-appid="${appId}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    `;
+    dom.blacklistList.appendChild(el);
+  });
+  
+  dom.blacklistList.querySelectorAll('.blacklist-item-remove').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const appId = parseInt(btn.dataset.appid, 10);
+      const res = await window.phantom.removeFromBlacklist(appId);
+      if (res.success) {
+        loadBlacklist();
+      }
+    });
+  });
+}
+
+dom.btnBlacklistAdd.addEventListener('click', async () => {
+  const appIdVal = dom.inputBlacklistAppId.value.trim();
+  if (!appIdVal) return;
+  const appId = parseInt(appIdVal, 10);
+  if (isNaN(appId) || appId <= 0) return;
+  
+  const res = await window.phantom.addToBlacklist(appId);
+  if (res.success) {
+    dom.inputBlacklistAppId.value = '';
+    const index = state.games.findIndex(g => g.appId === appId);
+    if (index !== -1) {
+      state.games.splice(index, 1);
+      await window.phantom.saveGames(state.games);
+      await loadGames();
+    }
+    loadBlacklist();
+  }
 });

@@ -160,7 +160,7 @@
   <!-- ========== MODAL SETTINGS ========== -->
   <div id="modal-settings" class="modal hidden">
     <div class="modal-overlay" id="overlay-settings"></div>
-    <div class="modal-card glass">
+    <div class="modal-card glass settings-modal-card">
       <div class="modal-header">
         <svg class="modal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/><circle cx="12" cy="12" r="3"/></svg>
         <h2 data-i18n="settings.title">Configurações</h2>
@@ -184,8 +184,22 @@
             <input type="number" id="input-rotation-interval" min="1" max="1440" value="15" style="height: 34px;">
           </div>
         </div>
+
+        <!-- Blacklist Section -->
+        <div class="settings-divider"></div>
+        <div class="settings-section-title" data-i18n="settings.blacklistTitle">Lista Negra de Jogos</div>
+        <div class="blacklist-add-row">
+          <div class="input-wrapper" style="flex: 1; margin-bottom: 0;">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="top:50%; transform:translateY(-50%); width:14px; height:14px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            <input type="number" id="input-blacklist-appid" placeholder="AppID (ex: 730)" style="height: 34px; padding-left: 32px;">
+          </div>
+          <button id="btn-blacklist-add" class="btn-small btn-accent" data-i18n="settings.blacklistAdd" style="height: 34px;">Bloquear</button>
+        </div>
+        <div id="blacklist-list" class="blacklist-list">
+          <!-- Blacklisted items dynamically rendered here -->
+        </div>
       </div>
-      <button id="btn-settings-close" class="btn-primary" style="margin-top:15px;">
+      <button id="btn-settings-close" class="btn-primary" style="margin-top:5px;">
         <span data-i18n="settings.close">Fechar</span>
       </button>
     </div>
