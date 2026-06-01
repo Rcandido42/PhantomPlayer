@@ -59,6 +59,17 @@ const i18n = {
     'dashboard.stats.weekly': 'Semana',
     'dashboard.achievements': 'Conquistas',
     'achievements.title': 'Conquistas',
+    'dashboard.cardAdvisor': 'Card Advisor',
+    'cards.title': 'Card Advisor',
+    'cards.empty': 'Nenhum jogo com cartas disponíveis encontrado.',
+    'cards.refresh': 'Atualizar',
+    'cards.scanning': 'A procurar badges...',
+    'cards.analyzing': 'Analisando jogo',
+    'cards.of': 'de',
+    'cards.remaining': 'cartas restantes',
+    'cards.avgPrice': 'Preço médio',
+    'cards.profit': 'Lucro estimado',
+    'cards.farm': 'Farmar',
     'logs.title': 'Consola de Logs'
   },
   en: {
@@ -121,6 +132,17 @@ const i18n = {
     'dashboard.stats.weekly': 'Weekly',
     'dashboard.achievements': 'Achievements',
     'achievements.title': 'Achievements',
+    'dashboard.cardAdvisor': 'Card Advisor',
+    'cards.title': 'Card Advisor',
+    'cards.empty': 'No games with available card drops found.',
+    'cards.refresh': 'Refresh',
+    'cards.scanning': 'Scanning badges...',
+    'cards.analyzing': 'Analyzing game',
+    'cards.of': 'of',
+    'cards.remaining': 'cards remaining',
+    'cards.avgPrice': 'Avg. price',
+    'cards.profit': 'Est. profit',
+    'cards.farm': 'Farm',
     'logs.title': 'Log Console'
   }
 };
@@ -175,7 +197,16 @@ const dom = {
   btnLogToggle: $('btn-log-toggle'),
   logConsole: $('log-console'),
   logToggleIcon: $('log-toggle-icon'),
-  dynamicWallpaper: $('dynamic-wallpaper')
+  dynamicWallpaper: $('dynamic-wallpaper'),
+  btnCardAdvisor: $('btn-card-advisor'),
+  modalCards: $('modal-cards'),
+  btnCardsClose: $('btn-cards-close'),
+  btnCardsRefresh: $('btn-cards-refresh'),
+  cardScanProgress: $('card-scan-progress'),
+  cardProgressFill: $('card-progress-fill'),
+  cardProgressText: $('card-progress-text'),
+  cardAdvisorList: $('card-advisor-list'),
+  cardAdvisorEmpty: $('card-advisor-empty')
 };
 
 let state = { games: [], farmHours: {}, goals: {}, isFarming: false, sessionStart: null, sessionInterval: null, searchDebounce: null, libraryGames: [], goalEditAppId: null, updateUrl: null };
@@ -1032,4 +1063,104 @@ async function checkUpdates() {
 
 dom.btnUpdate.addEventListener('click', () => {
   if (state.updateUrl) window.phantom.openExternal(state.updateUrl);
+});
+
+// ========== CARD ADVISOR ==========
+async function startCardScan() {
+  dom.cardAdvisorList.innerHTML = '';
+  dom.cardAdvisorEmpty.classList.add('hidden');
+  dom.cardScanProgress.classList.remove('hidden');
+  dom.cardProgressFill.style.width = '0%';
+  dom.cardProgressText.textContent = t('cards.scanning');
+  dom.btnCardsRefresh.disabled = true;
+
+  const result = await window.phantom.getCardRecommendations();
+
+  dom.cardScanProgress.classList.add('hidden');
+  dom.btnCardsRefresh.disabled = false;
+
+  if (result.error) {
+    dom.cardAdvisorEmpty.classList.remove('hidden');
+    dom.cardAdvisorEmpty.querySelector('p').textContent = result.error;
+    return;
+  }
+
+  if (!result.recommendations || result.recommendations.length === 0) {
+    dom.cardAdvisorEmpty.classList.remove('hidden');
+    return;
+  }
+
+  renderCardRecommendations(result.recommendations);
+}
+
+function renderCardRecommendations(recommendations) {
+  dom.cardAdvisorList.innerHTML = '';
+
+  recommendations.forEach(rec => {
+    const imgUrl = getGameImage(rec.appId);
+    const priceStr = formatCardPrice(rec.avgPrice, rec.currency);
+    const profitStr = formatCardPrice(rec.estimatedProfit, rec.currency);
+
+    const el = document.createElement('div');
+    el.className = 'card-advisor-item';
+    el.innerHTML = `
+      <img class="card-advisor-item-img" src="${imgUrl}" alt="" onerror="this.style.display='none'">
+      <div class="card-advisor-item-info">
+        <div class="card-advisor-item-name">${escapeHtml(rec.name)}</div>
+        <div class="card-advisor-item-meta">
+          <span>🃏 ${rec.cardsRemaining} ${t('cards.remaining')}</span>
+          <span>💲 ${t('cards.avgPrice')}: ${priceStr}</span>
+        </div>
+      </div>
+      <div class="card-advisor-item-profit">
+        <span class="card-profit-value">${profitStr}</span>
+        <span class="card-profit-label">${t('cards.profit')}</span>
+      </div>
+      <button class="card-advisor-item-farm" data-appid="${rec.appId}" data-name="${escapeHtml(rec.name)}">${t('cards.farm')}</button>
+    `;
+    dom.cardAdvisorList.appendChild(el);
+  });
+
+  // Farm buttons
+  dom.cardAdvisorList.querySelectorAll('.card-advisor-item-farm').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const appId = parseInt(btn.dataset.appid, 10);
+      const name = btn.dataset.name;
+      addGame({ appId, name, icon: getGameImage(appId) });
+      btn.textContent = '✓';
+      btn.disabled = true;
+    });
+  });
+}
+
+function formatCardPrice(cents, currency) {
+  const value = (cents / 100).toFixed(2);
+  return `${currency} ${value}`;
+}
+
+// Card scan progress listener
+if (window.phantom.onCardScanProgress) {
+  window.phantom.onCardScanProgress((data) => {
+    if (data.phase === 'badges') {
+      dom.cardProgressText.textContent = t('cards.scanning');
+      dom.cardProgressFill.style.width = '10%';
+    } else if (data.phase === 'prices') {
+      const pct = 10 + Math.round((data.current / data.total) * 90);
+      dom.cardProgressFill.style.width = pct + '%';
+      dom.cardProgressText.textContent = `${t('cards.analyzing')} ${data.current} ${t('cards.of')} ${data.total}: ${data.gameName || ''}`;
+    }
+  });
+}
+
+dom.btnCardAdvisor.addEventListener('click', () => {
+  dom.modalCards.classList.remove('hidden');
+  startCardScan();
+});
+
+dom.btnCardsClose.addEventListener('click', () => {
+  dom.modalCards.classList.add('hidden');
+});
+
+dom.btnCardsRefresh.addEventListener('click', () => {
+  startCardScan();
 });

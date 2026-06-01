@@ -51,6 +51,10 @@ contextBridge.exposeInMainWorld('phantom', {
   checkForUpdates: () => ipcRenderer.invoke('app:check-for-updates'),
   openExternal: (url) => ipcRenderer.invoke('app:open-external', url),
 
+  // Card Advisor
+  getCardRecommendations: () => ipcRenderer.invoke('steam:get-card-recommendations'),
+  onCardScanProgress: (cb) => ipcRenderer.on('app:card-scan-progress', (_e, data) => cb(data)),
+
   // Events
   onFarmTick: (cb) => ipcRenderer.on('steam:farm-tick', (_e, data) => cb(data)),
   onFarmingStopped: (cb) => ipcRenderer.on('steam:farming-stopped', () => cb()),

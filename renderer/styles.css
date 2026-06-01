@@ -1272,6 +1272,154 @@ body {
 }
 
 /* =============================================
+   CARD ADVISOR MODAL
+   ============================================= */
+
+.card-advisor-card {
+  width: 520px;
+  max-width: 90vw;
+  height: 520px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.card-scan-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.card-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.card-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.card-progress-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.card-advisor-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.card-advisor-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+.card-advisor-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  transition: all var(--transition);
+}
+
+.card-advisor-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--glass-border-hover);
+}
+
+.card-advisor-item-img {
+  width: 90px;
+  height: 34px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: var(--bg-tertiary);
+  flex-shrink: 0;
+}
+
+.card-advisor-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-advisor-item-name {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+
+.card-advisor-item-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.card-advisor-item-profit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.card-profit-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--success);
+}
+
+.card-profit-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-advisor-item-farm {
+  width: 60px;
+  height: 28px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent-light);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.card-advisor-item-farm:hover {
+  background: var(--accent);
+  color: white;
+}
+
+/* =============================================
    SETTINGS & LIBRARY MODALS
    ============================================= */
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://api.github.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' https://shared.akamai.steamstatic.com https://store.steampowered.com https://cdn.akamai.steamstatic.com data:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://api.github.com https://steamcommunity.com https://api.steampowered.com https://store.steampowered.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' https://shared.akamai.steamstatic.com https://store.steampowered.com https://cdn.akamai.steamstatic.com data:;">
   <title>PhantomPlayer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -250,6 +250,27 @@
     </div>
   </div>
 
+  <!-- ========== MODAL CARD ADVISOR ========== -->
+  <div id="modal-cards" class="modal hidden">
+    <div class="modal-overlay" id="overlay-cards"></div>
+    <div class="modal-card glass card-advisor-card">
+      <div class="modal-header">
+        <svg class="modal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <h2 data-i18n="cards.title">Card Advisor</h2>
+        <button id="btn-cards-close" class="close-modal-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div id="card-scan-progress" class="card-scan-progress hidden">
+        <div class="card-progress-bar"><div id="card-progress-fill" class="card-progress-fill"></div></div>
+        <span id="card-progress-text" class="card-progress-text">Analisando...</span>
+      </div>
+      <div id="card-advisor-empty" class="card-advisor-empty hidden">
+        <p data-i18n="cards.empty">Nenhum jogo com cartas disponíveis encontrado.</p>
+      </div>
+      <div id="card-advisor-list" class="card-advisor-list"></div>
+      <button id="btn-cards-refresh" class="btn-small btn-outline" style="margin-top: 12px; align-self: center;" data-i18n="cards.refresh">Atualizar</button>
+    </div>
+  </div>
+
   <!-- ========== DASHBOARD ========== -->
   <main id="screen-dashboard" class="screen hidden">
     <div class="status-bar glass">
@@ -259,6 +280,7 @@
         <span class="status-divider">•</span>
         <span id="steam-id" class="steam-id"></span>
       </div>
+      <button id="btn-card-advisor" class="btn-small btn-outline" style="margin-right: 6px;" title="Card Advisor">💰 <span data-i18n="dashboard.cardAdvisor">Card Advisor</span></button>
       <button id="btn-achievements" class="btn-small btn-outline" style="margin-right: 6px;" title="Ver Conquistas">🏆 <span data-i18n="dashboard.achievements">Conquistas</span></button>
       <button id="btn-logout" class="btn-small btn-outline" data-i18n="dashboard.logout">Sair</button>
     </div>

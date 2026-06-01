@@ -4,6 +4,7 @@ const https = require('https');
 const QRCode = require('qrcode');
 const { LoginSession, EAuthTokenPlatformType } = require('steam-session');
 const SteamClient = require('./src/steam/client');
+const CardAdvisor = require('./src/steam/cardAdvisor');
 const Settings = require('./src/store/settings');
 
 let mainWindow = null;
@@ -13,6 +14,8 @@ let settings = null;
 let farmInterval = null;
 let farmStartTime = null;
 let qrSession = null;
+let cardAdvisor = null;
+let webSessionCookies = null;
 
 let rotationIntervalTimer = null;
 let rotationGameIds = [];
@@ -308,6 +311,30 @@ function setupIPC() {
     return newlyUnlocked;
   });
 
+  // --- Card Advisor ---
+  ipcMain.handle('steam:get-card-recommendations', async () => {
+    if (!steamClient.isLoggedIn || !webSessionCookies) {
+      return { error: 'Not logged in or no web session' };
+    }
+    try {
+      cardAdvisor.setCookies(webSessionCookies);
+      cardAdvisor.setSteamId(steamClient.steamId);
+
+      const ownedGames = await steamClient.getOwnedGames();
+
+      const recommendations = await cardAdvisor.getRecommendations(ownedGames, (progress) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('app:card-scan-progress', progress);
+        }
+      });
+
+      return { success: true, recommendations };
+    } catch (err) {
+      console.error('Card Advisor error:', err);
+      return { error: err.message };
+    }
+  });
+
   // --- Auto Update ---
   ipcMain.handle('app:check-for-updates', async () => checkForUpdates());
   ipcMain.handle('app:open-external', async (_e, url) => { shell.openExternal(url); return { success: true }; });
@@ -331,12 +358,19 @@ function setupSteamEvents() {
     }
   });
 
+  // Capture web session cookies for Card Advisor
+  steamClient.client.on('webSession', (sessionID, cookies) => {
+    webSessionCookies = cookies;
+    logToClient('info', 'Sessão web obtida com sucesso.');
+  });
+
   steamClient.on('log', ({ level, message }) => logToClient(level, message));
 }
 
 app.whenReady().then(() => { 
   settings = new Settings(); 
-  steamClient = new SteamClient(); 
+  steamClient = new SteamClient();
+  cardAdvisor = new CardAdvisor();
   app.setLoginItemSettings({ openAtLogin: settings.getRunOnStartup() });
   createWindow(); 
   createTray(); 

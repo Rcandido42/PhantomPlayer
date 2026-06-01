@@ -116,9 +116,9 @@ class Settings {
     if (!data[id]) {
       data[id] = { unlocked: true, date: new Date().toISOString() };
       this.store.set('unlockedAchievements', data);
-      return true; // Successfully unlocked now
+      return true; 
     }
-    return false; // Already unlocked
+    return false; 
   }
 }
 
