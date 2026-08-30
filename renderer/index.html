@@ -175,6 +175,20 @@
           <label for="check-auto-farm" data-i18n="settings.autoFarm">Iniciar Farm automaticamente após login</label>
         </div>
         <div class="checkbox-group">
+          <input type="checkbox" id="check-pause-external" checked>
+          <label for="check-pause-external" data-i18n="settings.pauseExternal">Pausar quando outro jogo for aberto</label>
+        </div>
+        <div class="settings-inline-grid">
+          <div class="input-group">
+            <label for="input-max-games" data-i18n="settings.maxGames">Máximo simultâneo</label>
+            <div class="input-wrapper"><input type="number" id="input-max-games" min="1" max="10" value="5"></div>
+          </div>
+          <div class="input-group">
+            <label for="input-card-refresh" data-i18n="settings.cardRefresh">Rever cartas (min)</label>
+            <div class="input-wrapper"><input type="number" id="input-card-refresh" min="15" max="180" value="15"></div>
+          </div>
+        </div>
+        <div class="checkbox-group">
           <input type="checkbox" id="check-rotation">
           <label for="check-rotation" data-i18n="settings.rotationEnabled">Ativar Rotação de Jogos</label>
         </div>
@@ -197,6 +211,16 @@
         </div>
         <div id="blacklist-list" class="blacklist-list">
           <!-- Blacklisted items dynamically rendered here -->
+        </div>
+
+        <div class="settings-divider"></div>
+        <div class="settings-section-title" data-i18n="settings.dataSecurity">Dados e segurança</div>
+        <div id="security-summary" class="security-summary" data-i18n="settings.securityChecking">A verificar proteção dos dados...</div>
+        <div class="data-actions">
+          <button id="btn-export-json" class="btn-small btn-outline" data-i18n="settings.exportBackup">Exportar backup</button>
+          <button id="btn-export-csv" class="btn-small btn-outline" data-i18n="settings.exportCsv">Exportar sessões CSV</button>
+          <button id="btn-import-json" class="btn-small btn-outline" data-i18n="settings.import">Importar</button>
+          <button id="btn-clear-data" class="btn-small btn-danger" data-i18n="settings.clearData">Apagar todos os dados</button>
         </div>
       </div>
       <button id="btn-settings-close" class="btn-primary" style="margin-top:5px;">
@@ -242,6 +266,13 @@
           <input type="number" id="input-goal-hours" min="1" max="10000" placeholder="100">
         </div>
       </div>
+      <div class="input-group">
+        <label for="input-game-timer" data-i18n="timer.game">Temporizador por sessão (minutos, 0 = ilimitado)</label>
+        <div class="input-wrapper">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <input type="number" id="input-game-timer" min="0" max="10080" value="0">
+        </div>
+      </div>
       <div style="display:flex; gap:8px;">
         <button id="btn-goal-save" class="btn-primary" style="flex:1;"><span data-i18n="goals.save">Guardar</span></button>
         <button id="btn-goal-remove" class="btn-small btn-outline" style="height:44px; flex:0 0 auto; padding:0 16px;"><span data-i18n="goals.remove">Remover</span></button>
@@ -281,7 +312,39 @@
         <p data-i18n="cards.empty">Nenhum jogo com cartas disponíveis encontrado.</p>
       </div>
       <div id="card-advisor-list" class="card-advisor-list"></div>
-      <button id="btn-cards-refresh" class="btn-small btn-outline" style="margin-top: 12px; align-self: center;" data-i18n="cards.refresh">Atualizar</button>
+      <div class="card-modal-actions">
+        <button id="btn-card-queue" class="btn-small btn-accent" data-i18n="cards.queue">Iniciar fila inteligente</button>
+        <button id="btn-cards-refresh" class="btn-small btn-outline" data-i18n="cards.refresh">Atualizar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL PROFILES ========== -->
+  <div id="modal-profiles" class="modal hidden">
+    <div class="modal-overlay" id="overlay-profiles"></div>
+    <div class="modal-card glass manager-card">
+      <div class="modal-header">
+        <h2 data-i18n="profiles.title">Perfis de farm</h2>
+        <button id="btn-profiles-close" class="close-modal-btn" aria-label="Fechar">×</button>
+      </div>
+      <div class="profile-create-row">
+        <input id="input-profile-name" type="text" maxlength="60" placeholder="Nome do perfil">
+        <button id="btn-profile-save" class="btn-small btn-accent" data-i18n="profiles.save">Salvar jogos atuais</button>
+      </div>
+      <div id="profiles-list" class="manager-list"></div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL HISTORY ========== -->
+  <div id="modal-history" class="modal hidden">
+    <div class="modal-overlay" id="overlay-history"></div>
+    <div class="modal-card glass manager-card">
+      <div class="modal-header">
+        <h2 data-i18n="history.title">Histórico de sessões</h2>
+        <button id="btn-history-close" class="close-modal-btn" aria-label="Fechar">×</button>
+      </div>
+      <div id="history-list" class="manager-list"></div>
+      <button id="btn-history-clear" class="btn-small btn-outline" data-i18n="history.clear">Limpar histórico</button>
     </div>
   </div>
 
@@ -295,6 +358,8 @@
         <span id="steam-id" class="steam-id"></span>
       </div>
       <button id="btn-card-advisor" class="btn-small btn-outline" style="margin-right: 6px;" title="Card Advisor">💰 <span data-i18n="dashboard.cardAdvisor">Card Advisor</span></button>
+      <button id="btn-profiles" class="btn-small btn-outline" title="Perfis">🗂 <span data-i18n="dashboard.profiles">Perfis</span></button>
+      <button id="btn-history" class="btn-small btn-outline" title="Histórico">🕘 <span data-i18n="dashboard.history">Histórico</span></button>
       <button id="btn-achievements" class="btn-small btn-outline" style="margin-right: 6px;" title="Ver Conquistas">🏆 <span data-i18n="dashboard.achievements">Conquistas</span></button>
       <button id="btn-logout" class="btn-small btn-outline" data-i18n="dashboard.logout">Sair</button>
     </div>
@@ -348,6 +413,24 @@
           <span id="update-text"></span>
           <button id="btn-update" class="btn-small btn-accent">Download</button>
         </div>
+        <div class="session-controls glass">
+          <div class="session-control-field">
+            <label for="input-session-duration" data-i18n="session.duration">Duração da sessão</label>
+            <select id="input-session-duration">
+              <option value="0">Sem limite</option>
+              <option value="30">30 minutos</option>
+              <option value="60">1 hora</option>
+              <option value="120">2 horas</option>
+              <option value="240">4 horas</option>
+              <option value="480">8 horas</option>
+            </select>
+          </div>
+          <div class="session-control-field">
+            <label for="input-stop-at" data-i18n="session.stopAt">Parar às</label>
+            <input type="time" id="input-stop-at">
+          </div>
+          <div id="farm-schedule-status" class="farm-schedule-status" data-i18n="session.noTimer">Sem temporizador</div>
+        </div>
         <button id="btn-farm" class="btn-farm" disabled>
           <div class="btn-farm-inner">
             <svg id="farm-icon-play" class="farm-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
@@ -355,6 +438,7 @@
             <span id="btn-farm-text" data-i18n="dashboard.farm.start">Iniciar Farm</span>
           </div>
         </button>
+        <button id="btn-emergency-stop" class="btn-emergency" data-i18n="session.emergency">Parar tudo e encerrar sessão</button>
       </section>
     </div>
 

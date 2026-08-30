@@ -72,7 +72,28 @@ const i18n = {
     'cards.farm': 'Farmar',
     'logs.title': 'Consola de Logs',
     'settings.blacklistTitle': 'Lista Negra de Jogos',
-    'settings.blacklistAdd': 'Bloquear'
+    'settings.blacklistAdd': 'Bloquear',
+    'settings.pauseExternal': 'Pausar quando outro jogo for aberto',
+    'settings.maxGames': 'Máximo simultâneo',
+    'settings.cardRefresh': 'Rever cartas (min)',
+    'settings.dataSecurity': 'Dados e segurança',
+    'settings.securityChecking': 'A verificar proteção dos dados...',
+    'settings.exportBackup': 'Exportar backup',
+    'settings.exportCsv': 'Exportar sessões CSV',
+    'settings.import': 'Importar',
+    'settings.clearData': 'Apagar todos os dados',
+    'timer.game': 'Temporizador por sessão (minutos, 0 = ilimitado)',
+    'cards.queue': 'Iniciar fila inteligente',
+    'dashboard.profiles': 'Perfis',
+    'dashboard.history': 'Histórico',
+    'profiles.title': 'Perfis de farm',
+    'profiles.save': 'Salvar jogos atuais',
+    'history.title': 'Histórico de sessões',
+    'history.clear': 'Limpar histórico',
+    'session.duration': 'Duração da sessão',
+    'session.stopAt': 'Parar às',
+    'session.noTimer': 'Sem temporizador',
+    'session.emergency': 'Parar tudo e encerrar sessão'
   },
   en: {
     'login.subtitle': 'Log in to your Steam account',
@@ -147,7 +168,28 @@ const i18n = {
     'cards.farm': 'Farm',
     'logs.title': 'Log Console',
     'settings.blacklistTitle': 'Games Blacklist',
-    'settings.blacklistAdd': 'Block'
+    'settings.blacklistAdd': 'Block',
+    'settings.pauseExternal': 'Pause when another game is opened',
+    'settings.maxGames': 'Maximum simultaneous',
+    'settings.cardRefresh': 'Check cards (min)',
+    'settings.dataSecurity': 'Data and security',
+    'settings.securityChecking': 'Checking data protection...',
+    'settings.exportBackup': 'Export backup',
+    'settings.exportCsv': 'Export sessions CSV',
+    'settings.import': 'Import',
+    'settings.clearData': 'Delete all data',
+    'timer.game': 'Per-session timer (minutes, 0 = unlimited)',
+    'cards.queue': 'Start smart queue',
+    'dashboard.profiles': 'Profiles',
+    'dashboard.history': 'History',
+    'profiles.title': 'Farm profiles',
+    'profiles.save': 'Save current games',
+    'history.title': 'Session history',
+    'history.clear': 'Clear history',
+    'session.duration': 'Session duration',
+    'session.stopAt': 'Stop at',
+    'session.noTimer': 'No timer',
+    'session.emergency': 'Stop everything and sign out'
   }
 };
 
@@ -177,10 +219,14 @@ const dom = {
   btnTheme: $('btn-theme'), themeDropdown: $('theme-dropdown'),
   btnSettings: $('btn-settings'), modalSettings: $('modal-settings'), btnSettingsClose: $('btn-settings-close'),
   checkRunStartup: $('check-run-startup'), checkAutoFarm: $('check-auto-farm'),
+  checkPauseExternal: $('check-pause-external'), inputMaxGames: $('input-max-games'), inputCardRefresh: $('input-card-refresh'),
+  securitySummary: $('security-summary'), btnExportJson: $('btn-export-json'), btnExportCsv: $('btn-export-csv'),
+  btnImportJson: $('btn-import-json'), btnClearData: $('btn-clear-data'),
   btnLoadLibrary: $('btn-load-library'), modalLibrary: $('modal-library'), btnLibraryClose: $('btn-library-close'),
   inputLibrarySearch: $('input-library-search'), libraryList: $('library-list'), libraryLoading: $('library-loading'),
   modalGoal: $('modal-goal'), goalGameName: $('goal-game-name'), inputGoalHours: $('input-goal-hours'),
   btnGoalSave: $('btn-goal-save'), btnGoalRemove: $('btn-goal-remove'),
+  inputGameTimer: $('input-game-timer'),
   statsChart: $('stats-chart'),
   updateBanner: $('update-banner'), updateText: $('update-text'), btnUpdate: $('btn-update'),
 
@@ -213,10 +259,21 @@ const dom = {
   cardAdvisorEmpty: $('card-advisor-empty'),
   inputBlacklistAppId: $('input-blacklist-appid'),
   btnBlacklistAdd: $('btn-blacklist-add'),
-  blacklistList: $('blacklist-list')
+  blacklistList: $('blacklist-list'),
+  btnCardQueue: $('btn-card-queue'),
+  btnProfiles: $('btn-profiles'), modalProfiles: $('modal-profiles'), btnProfilesClose: $('btn-profiles-close'),
+  inputProfileName: $('input-profile-name'), btnProfileSave: $('btn-profile-save'), profilesList: $('profiles-list'),
+  btnHistory: $('btn-history'), modalHistory: $('modal-history'), btnHistoryClose: $('btn-history-close'),
+  historyList: $('history-list'), btnHistoryClear: $('btn-history-clear'),
+  inputSessionDuration: $('input-session-duration'), inputStopAt: $('input-stop-at'),
+  farmScheduleStatus: $('farm-schedule-status'), btnEmergencyStop: $('btn-emergency-stop')
 };
 
-let state = { games: [], farmHours: {}, goals: {}, isFarming: false, sessionStart: null, sessionInterval: null, searchDebounce: null, libraryGames: [], goalEditAppId: null, updateUrl: null };
+let state = {
+  games: [], farmHours: {}, goals: {}, gameTimers: {}, profiles: [], cardRecommendations: [],
+  isFarming: false, farmStatus: null, sessionStart: null, sessionInterval: null,
+  searchDebounce: null, libraryGames: [], goalEditAppId: null, updateUrl: null
+};
 
 function getGameImage(appId) {
   return `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${appId}/capsule_231x87.jpg`;
@@ -335,8 +392,9 @@ async function updateDashboard() {
   state.farmHours = await window.phantom.getFarmHours();
   dom.steamId.textContent = status.steamId || '';
   state.isFarming = status.isFarming;
+  state.farmStatus = status;
   if (state.isFarming) {
-    if (!state.sessionInterval) startSessionTimer();
+    startSessionTimer(status.sessionStart);
   } else {
     stopSessionTimer();
   }
@@ -358,7 +416,9 @@ function updateFarmButton() {
     dom.btnFarmText.textContent = t('dashboard.farm.stop');
     dom.farmIconPlay.classList.add('hidden'); dom.farmIconStop.classList.remove('hidden');
     dom.btnFarm.classList.add('farming'); dom.statusDot.classList.add('farming');
-    dom.statusText.textContent = t('dashboard.status.farming');
+    dom.statusText.textContent = state.farmStatus?.pauseReason === 'external-game'
+      ? (currentLang === 'pt' ? 'Pausado: outro jogo ativo' : 'Paused: another game is active')
+      : t('dashboard.status.farming');
   } else {
     dom.btnFarmText.textContent = t('dashboard.farm.start');
     dom.farmIconPlay.classList.remove('hidden'); dom.farmIconStop.classList.add('hidden');
@@ -378,27 +438,88 @@ dom.btnFarm.addEventListener('click', async () => {
   else { 
     const ids = state.games.map(g => g.appId); 
     if (!ids.length) return; 
-    await window.phantom.startFarm(ids); 
-    state.isFarming = true; 
-    startSessionTimer(); 
+    const durationMinutes = Number(dom.inputSessionDuration.value) || 0;
+    const stopAt = resolveStopAt(dom.inputStopAt.value);
+    const result = await window.phantom.startFarm(ids, { durationMinutes, stopAt });
+    if (!result.success) return;
+    state.isFarming = true;
+    state.farmStatus = result.status;
+    startSessionTimer(result.status?.sessionStart);
     updateDynamicWallpaper();
     checkAchievements();
   }
   updateFarmButton();
 });
 
-function startSessionTimer() {
-  state.sessionStart = Date.now(); dom.sessionTime.textContent = '00:00:00';
+function startSessionTimer(startedAt) {
+  const parsedStart = startedAt ? new Date(startedAt).getTime() : Date.now();
+  state.sessionStart = Number.isFinite(parsedStart) ? parsedStart : Date.now();
+  clearInterval(state.sessionInterval);
+  updateSessionClock();
   state.sessionInterval = setInterval(() => {
-    const s = Math.floor((Date.now() - state.sessionStart) / 1000);
-    dom.sessionTime.textContent = `${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor((s%3600)/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+    updateSessionClock();
   }, 1000);
 }
 
-function stopSessionTimer() { clearInterval(state.sessionInterval); state.sessionInterval = null; state.sessionStart = null; dom.sessionTime.textContent = '00:00:00'; }
+function updateSessionClock() {
+  const s = Math.max(0, Math.floor((Date.now() - state.sessionStart) / 1000));
+  dom.sessionTime.textContent = `${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor((s%3600)/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  updateScheduleStatus();
+}
+
+function resolveStopAt(timeValue) {
+  if (!timeValue) return null;
+  const [hours, minutes] = timeValue.split(':').map(Number);
+  const target = new Date();
+  target.setHours(hours, minutes, 0, 0);
+  if (target.getTime() <= Date.now()) target.setDate(target.getDate() + 1);
+  return target.toISOString();
+}
+
+function updateScheduleStatus() {
+  const status = state.farmStatus;
+  if (!status?.isFarming) {
+    dom.farmScheduleStatus.textContent = currentLang === 'pt' ? 'Sem temporizador' : 'No timer';
+    return;
+  }
+  if (status.pauseReason) {
+    dom.farmScheduleStatus.textContent = currentLang === 'pt' ? 'Contagem pausada' : 'Timer paused';
+    return;
+  }
+  const details = [];
+  if (status.endsAt) {
+    const remaining = Math.max(0, new Date(status.endsAt).getTime() - Date.now());
+    details.push(`${currentLang === 'pt' ? 'termina em' : 'ends in'} ${formatDuration(remaining)}`);
+  }
+  if (status.nextRotationAt) {
+    const remaining = Math.max(0, new Date(status.nextRotationAt).getTime() - Date.now());
+    details.push(`${currentLang === 'pt' ? 'rotação em' : 'rotation in'} ${formatDuration(remaining)}`);
+  }
+  dom.farmScheduleStatus.textContent = details.join(' · ') || (currentLang === 'pt' ? 'Sessão sem limite' : 'Unlimited session');
+}
+
+function formatDuration(milliseconds) {
+  const seconds = Math.max(0, Math.ceil(milliseconds / 1000));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m ${String(secs).padStart(2, '0')}s`;
+}
+
+function stopSessionTimer() {
+  clearInterval(state.sessionInterval);
+  state.sessionInterval = null;
+  state.sessionStart = null;
+  dom.sessionTime.textContent = '00:00:00';
+  updateScheduleStatus();
+}
 
 window.phantom.onFarmTick((data) => { 
   state.farmHours = data.farmHours; 
+  if (data.status) {
+    state.farmStatus = data.status;
+    state.isFarming = data.status.isFarming;
+  }
   updateStats(); 
   renderGameList(); 
   if (dom.tabStatsWeekly.classList.contains('active')) {
@@ -411,9 +532,26 @@ window.phantom.onFarmTick((data) => {
 });
 window.phantom.onFarmingStopped(() => { 
   state.isFarming = false; 
+  state.farmStatus = null;
   stopSessionTimer(); 
   updateFarmButton(); 
   updateDynamicWallpaper();
+});
+
+window.phantom.onFarmingStarted((status) => {
+  state.isFarming = true;
+  state.farmStatus = status;
+  startSessionTimer(status.sessionStart);
+  updateFarmButton();
+});
+
+window.phantom.onFarmStatus((status) => {
+  state.farmStatus = status;
+  state.isFarming = status.isFarming;
+  if (status.isFarming && !state.sessionInterval) startSessionTimer(status.sessionStart);
+  updateFarmButton();
+  updateScheduleStatus();
+  renderGameList();
 });
 
 // ========== GAMES ==========
@@ -421,6 +559,7 @@ async function loadGames() {
   state.games = await window.phantom.getGames();
   state.farmHours = await window.phantom.getFarmHours();
   state.goals = await window.phantom.getGoals();
+  state.gameTimers = await window.phantom.getGameTimers();
   renderGameList(); 
   updateStats(); 
   updateFarmButton(); 
@@ -442,15 +581,18 @@ function renderGameList() {
     const hours = (state.farmHours[String(game.appId)] || 0).toFixed(1);
     const goal = state.goals[String(game.appId)];
     const imgUrl = getGameImage(game.appId);
+    const isActive = state.farmStatus?.currentGames?.includes(game.appId);
+    const gameTimer = Number(state.gameTimers[String(game.appId)] || 0);
     const el = document.createElement('div');
-    el.className = 'game-item';
+    el.className = `game-item${isActive ? ' active-farm' : ''}`;
     let progressHtml = '';
     if (goal) {
       const pct = Math.min((parseFloat(hours) / goal) * 100, 100);
       const isComplete = pct >= 100;
+      const remainingHours = Math.max(0, goal - parseFloat(hours));
       progressHtml = `
         <div class="game-item-progress"><div class="game-item-progress-fill${isComplete ? ' complete' : ''}" style="width:${pct}%"></div></div>
-        <div class="game-item-goal${isComplete ? ' complete' : ''}">${isComplete ? '✓ ' + t('goals.complete') : hours + ' ' + t('goals.progress') + ' ' + goal + 'h'}</div>`;
+        <div class="game-item-goal${isComplete ? ' complete' : ''}">${isComplete ? '✓ ' + t('goals.complete') : `${hours} ${t('goals.progress')} ${goal}h · ${remainingHours.toFixed(1)}h ${currentLang === 'pt' ? 'restantes' : 'remaining'}`}</div>`;
     }
     el.innerHTML = `
       <img class="game-item-icon" src="${imgUrl}" alt="" onerror="this.style.display='none'">
@@ -459,6 +601,7 @@ function renderGameList() {
         <div class="game-item-meta">
           <span>${t('dashboard.games.appId')}: ${game.appId}</span>
           <span>${hours}${t('dashboard.games.hours')}</span>
+          ${gameTimer > 0 ? `<span>⏱ ${gameTimer} min</span>` : ''}
         </div>
         ${progressHtml}
       </div>
@@ -534,7 +677,35 @@ dom.btnLogout.addEventListener('click', async () => {
   showScreen('login'); dom.inputPassword.value = '';
 });
 
-window.phantom.onDisconnected(() => { state.isFarming = false; stopSessionTimer(); showScreen('login'); showError(t('error.disconnected')); });
+window.phantom.onDisconnected((data) => {
+  if (data?.reconnecting) {
+    dom.statusDot.classList.remove('online');
+    dom.statusDot.classList.add('reconnecting');
+    dom.statusText.textContent = currentLang === 'pt' ? 'A reconectar...' : 'Reconnecting...';
+    state.farmStatus = { ...(state.farmStatus || {}), connectionState: 'reconnecting' };
+    return;
+  }
+  state.isFarming = false;
+  stopSessionTimer();
+  showScreen('login');
+  showError(t('error.disconnected'));
+});
+
+window.phantom.onConnectionState(({ state: connectionState }) => {
+  dom.statusDot.classList.toggle('reconnecting', connectionState === 'reconnecting');
+  dom.statusDot.classList.toggle('online', connectionState === 'online');
+  if (connectionState === 'online') {
+    dom.statusText.textContent = state.isFarming ? t('dashboard.status.farming') : t('dashboard.status.online');
+    updateDashboard();
+  }
+});
+
+window.phantom.onReconnectFailed(() => {
+  state.isFarming = false;
+  stopSessionTimer();
+  showScreen('login');
+  showError(currentLang === 'pt' ? 'Sessão expirada. Faça login novamente.' : 'Session expired. Please log in again.');
+});
 
 // ========== WINDOW ==========
 dom.btnMinimize.addEventListener('click', () => window.phantom.minimizeWindow());
@@ -592,6 +763,15 @@ dom.btnSettings.addEventListener('click', async () => {
   const rotationInterval = await window.phantom.getRotationInterval();
   dom.checkRotation.checked = rotationEnabled;
   dom.inputRotationInterval.value = rotationInterval;
+  const farmOptions = await window.phantom.getFarmOptions();
+  dom.checkPauseExternal.checked = farmOptions.pauseOnExternalGame;
+  dom.inputMaxGames.value = farmOptions.maxSimultaneousGames;
+  dom.inputCardRefresh.value = farmOptions.cardQueueRefreshMinutes;
+  const security = await window.phantom.getSecurityInfo();
+  dom.securitySummary.textContent = security.encryptionAvailable
+    ? `${currentLang === 'pt' ? 'Credenciais e token protegidos pelo Windows.' : 'Credentials and token protected by Windows.'} ${currentLang === 'pt' ? 'Backups nunca incluem segredos.' : 'Backups never include secrets.'}`
+    : (currentLang === 'pt' ? 'Criptografia do sistema indisponível; nenhum segredo será guardado.' : 'System encryption unavailable; no secrets will be saved.');
+  dom.securitySummary.title = security.configPath;
   
   const rotationIntervalGroup = $('rotation-interval-group');
   if (rotationIntervalGroup) {
@@ -613,8 +793,131 @@ dom.btnSettingsClose.addEventListener('click', async () => {
   
   await window.phantom.setRotationEnabled(rotationEnabled);
   await window.phantom.setRotationInterval(rotationInterval);
+  await window.phantom.setFarmOptions({
+    maxSimultaneousGames: Number(dom.inputMaxGames.value) || 1,
+    pauseOnExternalGame: dom.checkPauseExternal.checked,
+    cardQueueRefreshMinutes: Number(dom.inputCardRefresh.value) || 15
+  });
   
   dom.modalSettings.classList.add('hidden');
+});
+
+dom.btnExportJson.addEventListener('click', () => window.phantom.exportData('json'));
+dom.btnExportCsv.addEventListener('click', () => window.phantom.exportData('csv'));
+dom.btnImportJson.addEventListener('click', async () => {
+  const result = await window.phantom.importData();
+  if (result.success) {
+    currentLang = await window.phantom.getLanguage() || 'pt';
+    applyTranslations();
+    applyTheme(await window.phantom.getTheme() || 'phantom');
+    await loadGames();
+  }
+  else if (result.error) window.alert(result.error);
+});
+dom.btnClearData.addEventListener('click', async () => {
+  const warning = currentLang === 'pt'
+    ? 'Apagar configurações, histórico, horas e encerrar a sessão? Esta ação não pode ser desfeita.'
+    : 'Delete settings, history and hours, and sign out? This cannot be undone.';
+  if (!window.confirm(warning)) return;
+  await window.phantom.clearAllData();
+  state.games = [];
+  state.farmHours = {};
+  state.goals = {};
+  state.gameTimers = {};
+  dom.modalSettings.classList.add('hidden');
+  showScreen('login');
+  startQRLogin();
+});
+
+// ========== PROFILES AND HISTORY ==========
+async function openProfiles() {
+  state.profiles = await window.phantom.getProfiles();
+  dom.profilesList.innerHTML = '';
+  if (!state.profiles.length) {
+    dom.profilesList.innerHTML = `<div class="manager-empty">${currentLang === 'pt' ? 'Nenhum perfil salvo.' : 'No saved profiles.'}</div>`;
+  }
+  for (const profile of state.profiles) {
+    const row = document.createElement('div');
+    row.className = 'manager-item';
+    row.innerHTML = `
+      <div><strong>${escapeHtml(profile.name)}</strong><span>${profile.gameIds.length} ${currentLang === 'pt' ? 'jogos' : 'games'}${profile.durationMinutes ? ` · ${profile.durationMinutes} min` : ''}</span></div>
+      <div class="manager-actions"><button class="btn-small btn-accent" data-action="run">Iniciar</button><button class="btn-small btn-outline" data-action="delete">Excluir</button></div>`;
+    row.querySelector('[data-action="run"]').addEventListener('click', async () => {
+      const result = await window.phantom.startFarm(profile.gameIds, {
+        profileId: profile.id,
+        source: 'profile',
+        rotationEnabled: profile.rotationEnabled,
+        rotationIntervalMinutes: profile.rotationIntervalMinutes,
+        durationMinutes: profile.durationMinutes
+      });
+      if (result.success) {
+        state.isFarming = true;
+        state.farmStatus = result.status;
+        dom.modalProfiles.classList.add('hidden');
+        updateFarmButton();
+      }
+    });
+    row.querySelector('[data-action="delete"]').addEventListener('click', async () => {
+      await window.phantom.deleteProfile(profile.id);
+      openProfiles();
+    });
+    dom.profilesList.appendChild(row);
+  }
+  dom.modalProfiles.classList.remove('hidden');
+}
+
+dom.btnProfiles.addEventListener('click', openProfiles);
+dom.btnProfilesClose.addEventListener('click', () => dom.modalProfiles.classList.add('hidden'));
+$('overlay-profiles').addEventListener('click', () => dom.modalProfiles.classList.add('hidden'));
+dom.btnProfileSave.addEventListener('click', async () => {
+  const name = dom.inputProfileName.value.trim();
+  if (!name || !state.games.length) return;
+  const rotationEnabled = await window.phantom.getRotationEnabled();
+  const rotationIntervalMinutes = await window.phantom.getRotationInterval();
+  await window.phantom.saveProfile({
+    name,
+    gameIds: state.games.map(game => game.appId),
+    rotationEnabled,
+    rotationIntervalMinutes,
+    durationMinutes: Number(dom.inputSessionDuration.value) || 0
+  });
+  dom.inputProfileName.value = '';
+  openProfiles();
+});
+
+async function openHistory() {
+  const sessions = await window.phantom.getSessions();
+  dom.historyList.innerHTML = '';
+  if (!sessions.length) {
+    dom.historyList.innerHTML = `<div class="manager-empty">${currentLang === 'pt' ? 'Ainda não existem sessões concluídas.' : 'No completed sessions yet.'}</div>`;
+  }
+  sessions.forEach(session => {
+    const row = document.createElement('div');
+    row.className = 'manager-item history-item';
+    const activeHours = Object.values(session.gameHours || {}).reduce((sum, value) => sum + Number(value || 0), 0);
+    row.innerHTML = `<div><strong>${new Date(session.startedAt).toLocaleString()}</strong><span>${session.gameIds?.length || 0} ${currentLang === 'pt' ? 'jogos' : 'games'} · ${activeHours.toFixed(2)}h · ${escapeHtml(session.reason || '')}</span></div>`;
+    dom.historyList.appendChild(row);
+  });
+  dom.modalHistory.classList.remove('hidden');
+}
+
+dom.btnHistory.addEventListener('click', openHistory);
+dom.btnHistoryClose.addEventListener('click', () => dom.modalHistory.classList.add('hidden'));
+$('overlay-history').addEventListener('click', () => dom.modalHistory.classList.add('hidden'));
+dom.btnHistoryClear.addEventListener('click', async () => {
+  if (!window.confirm(currentLang === 'pt' ? 'Limpar todo o histórico de sessões?' : 'Clear all session history?')) return;
+  await window.phantom.clearSessions();
+  openHistory();
+});
+
+dom.btnEmergencyStop.addEventListener('click', async () => {
+  if (!window.confirm(currentLang === 'pt' ? 'Parar tudo e remover o login automático desta conta?' : 'Stop everything and remove automatic login for this account?')) return;
+  await window.phantom.emergencyStop();
+  state.isFarming = false;
+  state.farmStatus = null;
+  stopSessionTimer();
+  showScreen('login');
+  startQRLogin();
 });
 
 // ========== LIBRARY ==========
@@ -679,6 +982,7 @@ function openGoalModal(game) {
   dom.goalGameName.textContent = game.name || 'App ' + game.appId;
   const existing = state.goals[String(game.appId)];
   dom.inputGoalHours.value = existing || '';
+  dom.inputGameTimer.value = state.gameTimers[String(game.appId)] || 0;
   dom.btnGoalRemove.style.display = existing ? '' : 'none';
   dom.modalGoal.classList.remove('hidden');
   setTimeout(() => dom.inputGoalHours.focus(), 100);
@@ -686,9 +990,15 @@ function openGoalModal(game) {
 
 dom.btnGoalSave.addEventListener('click', async () => {
   const hours = parseInt(dom.inputGoalHours.value, 10);
-  if (!hours || hours <= 0 || !goalEditAppId) return;
-  await window.phantom.setGoal(goalEditAppId, hours);
-  state.goals[String(goalEditAppId)] = hours;
+  const timerMinutes = Math.max(0, parseInt(dom.inputGameTimer.value, 10) || 0);
+  if (!goalEditAppId) return;
+  if (hours > 0) {
+    await window.phantom.setGoal(goalEditAppId, hours);
+    state.goals[String(goalEditAppId)] = hours;
+  }
+  await window.phantom.setGameTimer(goalEditAppId, timerMinutes);
+  if (timerMinutes > 0) state.gameTimers[String(goalEditAppId)] = timerMinutes;
+  else delete state.gameTimers[String(goalEditAppId)];
   dom.modalGoal.classList.add('hidden');
   renderGameList();
   checkAchievements();
@@ -1081,6 +1391,7 @@ async function startCardScan() {
   dom.cardProgressFill.style.width = '0%';
   dom.cardProgressText.textContent = t('cards.scanning');
   dom.btnCardsRefresh.disabled = true;
+  dom.btnCardQueue.disabled = true;
 
   const result = await window.phantom.getCardRecommendations();
 
@@ -1088,16 +1399,21 @@ async function startCardScan() {
   dom.btnCardsRefresh.disabled = false;
 
   if (result.error) {
+    state.cardRecommendations = [];
     dom.cardAdvisorEmpty.classList.remove('hidden');
     dom.cardAdvisorEmpty.querySelector('p').textContent = result.error;
     return;
   }
 
   if (!result.recommendations || result.recommendations.length === 0) {
+    state.cardRecommendations = [];
+    dom.btnCardQueue.disabled = true;
     dom.cardAdvisorEmpty.classList.remove('hidden');
     return;
   }
 
+  state.cardRecommendations = result.recommendations;
+  dom.btnCardQueue.disabled = false;
   renderCardRecommendations(result.recommendations);
 }
 
@@ -1171,6 +1487,30 @@ dom.btnCardsClose.addEventListener('click', () => {
 
 dom.btnCardsRefresh.addEventListener('click', () => {
   startCardScan();
+});
+
+dom.btnCardQueue.addEventListener('click', async () => {
+  if (!state.cardRecommendations.length) return;
+  dom.btnCardQueue.disabled = true;
+  const result = await window.phantom.startCardQueue(state.cardRecommendations);
+  dom.btnCardQueue.disabled = false;
+  if (result.success) {
+    state.isFarming = true;
+    state.farmStatus = result.status;
+    dom.modalCards.classList.add('hidden');
+    updateFarmButton();
+    startSessionTimer(result.status.sessionStart);
+  }
+});
+
+window.phantom.onCardQueueUpdated(({ recommendations }) => {
+  state.cardRecommendations = recommendations || [];
+  if (!state.cardRecommendations.length) {
+    state.isFarming = false;
+    state.farmStatus = null;
+    stopSessionTimer();
+    updateFarmButton();
+  }
 });
 
 // ========== BLACKLIST ==========

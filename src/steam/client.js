@@ -10,6 +10,8 @@ class SteamClient extends EventEmitter {
     this.currentGames = [];
     this.guardCallback = null;
     this.steamId = null;
+    this.connectionState = 'offline';
+    this.externalPlayingApp = 0;
     this._setupListeners();
   }
 
@@ -22,6 +24,7 @@ class SteamClient extends EventEmitter {
 
     this.client.on('loggedOn', () => {
       this.isLoggedIn = true;
+      this.connectionState = 'online';
       this.steamId = this.client.steamID.getSteamID64();
       this.client.setPersona(SteamUser.EPersonaState.Online);
       this.emit('log', { level: 'success', message: `Autenticado com sucesso! ID: ${this.steamId}` });
@@ -31,6 +34,7 @@ class SteamClient extends EventEmitter {
     this.client.on('error', (err) => {
       this.isLoggedIn = false;
       this.isFarming = false;
+      this.connectionState = 'offline';
       this.emit('log', { level: 'error', message: `Erro na Steam: ${err.message}` });
       this.emit('error', { eresult: err.eresult, message: err.message });
     });
@@ -38,18 +42,26 @@ class SteamClient extends EventEmitter {
     this.client.on('disconnected', (eresult, msg) => {
       this.isLoggedIn = false;
       this.isFarming = false;
+      this.connectionState = 'offline';
       this.currentGames = [];
       this.emit('log', { level: 'warn', message: `Desconectado da Steam. Código: ${eresult}` });
       this.emit('disconnected', { eresult, message: msg });
     });
+
+    this.client.on('playingState', (blocked, playingApp) => {
+      this.externalPlayingApp = blocked ? Number(playingApp || 0) : 0;
+      this.emit('external-playing', { blocked: Boolean(blocked), appId: this.externalPlayingApp });
+    });
   }
 
   login(username, password) {
+    this.connectionState = 'connecting';
     this.emit('log', { level: 'info', message: `Tentando login com senha para utilizador "${username}"...` });
     this.client.logOn({ accountName: username, password: password });
   }
 
   loginWithToken(refreshToken) {
+    this.connectionState = 'connecting';
     this.emit('log', { level: 'info', message: `Tentando login automático com token persistente...` });
     this.client.logOn({ refreshToken });
   }
@@ -64,16 +76,20 @@ class SteamClient extends EventEmitter {
 
   startFarm(gameIds) {
     if (this.isLoggedIn && gameIds.length > 0) {
-      this.client.gamesPlayed(gameIds);
+      const normalized = [...new Set(gameIds.map(Number))];
+      if (this.isFarming && JSON.stringify(this.currentGames) === JSON.stringify(normalized)) return true;
+      this.client.gamesPlayed(normalized);
       this.isFarming = true;
-      this.currentGames = gameIds;
-      this.emit('log', { level: 'success', message: `Iniciando farm dos IDs: ${gameIds.join(', ')}` });
-      this.emit('farming-started', { games: gameIds });
+      this.currentGames = normalized;
+      this.emit('log', { level: 'success', message: `Iniciando farm dos IDs: ${normalized.join(', ')}` });
+      this.emit('farming-started', { games: normalized });
+      return true;
     }
+    return false;
   }
 
   stopFarm() {
-    this.client.gamesPlayed([]);
+    if (this.isLoggedIn) this.client.gamesPlayed([]);
     this.isFarming = false;
     this.currentGames = [];
     this.emit('log', { level: 'info', message: `Parando farm de jogos.` });
@@ -85,6 +101,7 @@ class SteamClient extends EventEmitter {
     this.stopFarm();
     this.client.logOff();
     this.isLoggedIn = false;
+    this.connectionState = 'offline';
     this.steamId = null;
   }
 
@@ -93,7 +110,9 @@ class SteamClient extends EventEmitter {
       isLoggedIn: this.isLoggedIn,
       isFarming: this.isFarming,
       currentGames: this.currentGames,
-      steamId: this.steamId
+      steamId: this.steamId,
+      connectionState: this.connectionState,
+      externalPlayingApp: this.externalPlayingApp
     };
   }
 

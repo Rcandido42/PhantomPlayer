@@ -634,6 +634,7 @@ body {
   align-items: center;
   gap: 8px;
   font-size: 12px;
+  margin-right: auto;
 }
 
 .status-dot-wrapper {
@@ -2149,4 +2150,223 @@ body {
 }
 @keyframes fadeOutUp {
   to { transform: translateY(-20px); opacity: 0; }
+}
+
+/* =============================================
+   SESSION MANAGEMENT, PRIVACY AND RESPONSIVE UI
+   ============================================= */
+
+.status-dot.reconnecting {
+  background: var(--warning);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.35);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.game-item.active-farm {
+  border-color: var(--success);
+  background: rgba(34, 197, 94, 0.08);
+  box-shadow: inset 3px 0 0 var(--success);
+}
+
+.settings-inline-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.settings-inline-grid .input-group {
+  margin-bottom: 8px;
+}
+
+.security-summary {
+  padding: 10px 12px;
+  border: 1px solid rgba(34, 197, 94, 0.18);
+  border-radius: 8px;
+  background: rgba(34, 197, 94, 0.06);
+  color: var(--text-secondary);
+  font-size: 10px;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.data-actions,
+.card-modal-actions,
+.manager-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.card-modal-actions {
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.btn-danger {
+  background: var(--danger-soft);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.btn-danger:hover {
+  background: var(--danger);
+  color: white;
+}
+
+.session-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 10px;
+}
+
+.session-control-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.session-control-field label {
+  color: var(--text-muted);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.session-control-field select,
+.session-control-field input,
+.profile-create-row input,
+.settings-inline-grid input {
+  width: 100%;
+  height: 30px;
+  border: 1px solid var(--glass-border);
+  border-radius: 7px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  padding: 0 8px;
+  font-family: inherit;
+  font-size: 10px;
+  outline: none;
+}
+
+.farm-schedule-status {
+  grid-column: 1 / -1;
+  color: var(--accent-light);
+  font-size: 9px;
+  min-height: 12px;
+  text-align: center;
+}
+
+.btn-emergency {
+  border: 0;
+  background: transparent;
+  color: var(--danger);
+  font-family: inherit;
+  font-size: 9px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.btn-emergency:hover { opacity: 1; text-decoration: underline; }
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+}
+
+.manager-card {
+  width: min(620px, 92vw);
+  max-height: 78vh;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.manager-card .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profile-create-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.profile-create-row input { flex: 1; }
+
+.manager-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 100px;
+  max-height: 48vh;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.manager-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+}
+
+.manager-item > div:first-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.manager-item strong {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manager-item span,
+.manager-empty {
+  color: var(--text-muted);
+  font-size: 10px;
+  margin-top: 3px;
+}
+
+@media (min-width: 1180px) {
+  .dashboard-grid { grid-template-columns: minmax(0, 1fr) 320px; }
+  .stats-grid { flex-direction: row; }
+  .stat-card { flex: 1; }
+}
+
+@media (max-width: 880px) {
+  #screen-dashboard { overflow-y: auto; }
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+  .games-panel { min-height: 420px; }
+  .control-panel { min-height: 520px; }
+  .stats-grid { flex-direction: row; }
+  .stat-card { flex: 1; }
+  .status-bar { flex-wrap: wrap; gap: 6px; }
+  .status-left { flex: 1 0 100%; }
+}
+
+@media (max-width: 680px) {
+  .titlebar-title,
+  .steam-id,
+  .status-bar button span { display: none; }
+  .add-game-row { flex-wrap: wrap; }
+  .search-wrapper { flex-basis: 100%; }
+  .settings-inline-grid,
+  .session-controls { grid-template-columns: 1fr; }
+  .farm-schedule-status { grid-column: 1; }
+  .game-item-icon { width: 72px; }
+  .manager-item { align-items: flex-start; flex-direction: column; }
 }

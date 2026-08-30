@@ -31,6 +31,13 @@ A arquitetura do projeto foi estruturada com um foco rigoroso na segurança da c
 - 🔒 **Credenciais encriptadas** — Encriptação nativa do Windows (DPAPI)
 - 📌 **System tray** — Minimiza para a bandeja do sistema
 - 🌐 **Bilingue** — Interface em Português e Inglês
+- 🔄 **Reconexão automática** — Retoma a sessão após quedas temporárias da Steam
+- ⏲️ **Temporizadores** — Limite global, hora de paragem e duração individual por jogo
+- 🗂️ **Perfis de farm** — Guarde conjuntos de jogos, rotação e duração
+- 🃏 **Fila inteligente de cartas** — Revê periodicamente os drops e remove jogos concluídos
+- 📊 **Histórico de sessões** — Registo de início, fim, jogos e horas efetivas
+- 🛑 **Controles de segurança** — Limite simultâneo, pausa por jogo externo e paragem de emergência
+- 💾 **Backup sem segredos** — Exportação JSON, importação e sessões em CSV
 
 ---
 
@@ -50,6 +57,19 @@ A arquitetura do projeto foi estruturada com um foco rigoroso na segurança da c
 - As senhas são encriptadas pelo **DPAPI do Windows** (o mesmo sistema usado pelo Chrome)
 - O ficheiro de configuração fica em `%APPDATA%` — fora do projeto
 - Toda a comunicação é feita diretamente com os servidores da Valve
+- Tokens de sessão também são protegidos pela encriptação nativa do sistema
+- Backups nunca incluem senha, token de sessão ou cookies
+- A aplicação permite apagar todos os dados locais e encerrar a sessão imediatamente
+
+---
+
+## 🧪 Testes
+
+```bash
+npm test
+```
+
+A suíte cobre normalização e limites de jogos, contagem de horas, reconexão, pausa quando outro jogo está ativo, temporizadores, rotação e o contrato entre a interface e a bridge do Electron.
 
 ---
 
